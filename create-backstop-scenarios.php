@@ -2,8 +2,8 @@
 // Pfad zur CSV-Datei
 $csvFile = 'intern_html.csv';
 
-// Zieldomain anpassen
-$testDomain = 'https://example-symlink.ddev.site';
+// Testdomain anpassen
+$testDomain = 'https://example.ddev.site';
 
 // Referenz-Domain anpassen
 $referenceDomain = 'https://www.example.com';
