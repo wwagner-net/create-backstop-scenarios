@@ -1,6 +1,6 @@
 <?php
 // Pfad zur CSV-Datei
-$csvFile = 'intern_html.csv';
+$csvFile = 'crawled_urls.csv';
 
 // Testdomain anpassen
 $testDomain = 'https://example.ddev.site';

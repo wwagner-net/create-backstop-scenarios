@@ -12,6 +12,7 @@ Dieses Repository enthält Skripte zur automatisierten Erzeugung von BackstopJS-
 
 1. **PHP-Skript (create-backstop-scenarios.php)**
 2. **BackstopJS-Konfigurationsdatei (backstop.js)**
+3. **PHP-Crawler-Skript (crawler.php)**
 
 ### 1. PHP-Skript (create-backstop-scenarios.php)
 
@@ -20,7 +21,7 @@ Dieses Skript liest die URLs aus einer CSV-Datei ein, teilt sie in Blöcke von j
 ```php
 <?php
 // Pfad zur CSV-Datei
-$csvFile = 'intern_html.csv';
+$csvFile = 'crawled_urls.csv';
 
 // Testdomain anpassen
 $testDomain = 'https://example.ddev.site';
@@ -153,6 +154,109 @@ module.exports =
     };
 ```
 
+### 3. PHP-Crawler-Skript (crawler.php)
+
+Dieses Skript crawlt die angegebene Referenz-Domain, extrahiert alle relevanten URLs und speichert sie in einer CSV-Datei. Es filtert dabei Links auf Dateien, JavaScript, tel:, mailto:, und URLs mit Parametern.
+
+Es kann als Alternative zu Tools wie dem Screaming Frog SEO Spider genutzt werden:
+
+**Wichtig:** Die erzeugte CSV-Datei sollte überpfrüft und ggf. bereinigt werden. Es kann auch sein, dass die Liste der URLs nicht vollständig ist.
+
+```php
+<?php
+
+function getUrls($domain) {
+    $visited = [];
+    $toVisit = [$domain];
+    $urls = [];
+    $totalVisited = 0;
+
+    while ($toVisit) {
+        $currentUrl = array_pop($toVisit);
+
+        // Skip if already visited
+        if (in_array($currentUrl, $visited)) {
+            continue;
+        }
+
+        $visited[] = $currentUrl;
+        $html = @file_get_contents($currentUrl);
+        if ($html === FALSE) {
+            continue;
+        }
+
+        // Matches all href attributes
+        preg_match_all('/href="([^"]*)"/i', $html, $matches);
+
+        foreach ($matches[1] as $url) {
+            // Resolve relative URLs
+            if (strpos($url, 'http') !== 0) {
+                $url = rtrim($domain, '/') . '/' . ltrim($url, '/');
+            }
+
+            // Filter out URLs that don't belong to the domain
+            if (strpos($url, $domain) !== 0) {
+                continue;
+            }
+
+            // Filter out URLs that are likely to be files (not pages)
+            if (preg_match('/\.(pdf|docx?|xlsx?|pptx?|jpg|jpeg|png|gif|mp4|mp3|zip|rar|7z|tar|gz|ico|svg|webmanifest)$/i', $url)) {
+                continue;
+            }
+
+            // Filter out URLs with parameters
+            if (strpos($url, '?') !== false) {
+                continue;
+            }
+
+            // Filter out tel:, mailto:, and javascript: links
+            if (strpos($url, 'tel:') !== false || strpos($url, 'mailto:') !== false || strpos($url, 'javascript:') !== false) {
+                continue;
+            }
+
+            // Add to URLs list
+            $urls[] = $url;
+
+            // Add to the list of URLs to visit
+            if (!in_array($url, $visited) && !in_array($url, $toVisit)) {
+                $toVisit[] = $url;
+            }
+        }
+
+        $totalVisited++;
+        echo "Besuchte Seiten: $totalVisited, Noch zu besuchen: " . count($toVisit) . "\r";
+    }
+
+    // Remove duplicates and sort
+    $urls = array_unique($urls);
+    sort($urls);
+
+    echo "\n";
+
+    return $urls;
+}
+
+// Referenz-Domain anpassen
+$referenceDomain = 'https://www.example.com';
+
+// URLs crawlen
+$urls = getUrls($referenceDomain);
+
+// Pfad zur Ausgabe-CSV-Datei
+$outputCsvFile = 'crawled_urls.csv';
+
+// CSV-Datei schreiben
+if (($handle = fopen($outputCsvFile, 'w')) !== FALSE) {
+    foreach ($urls as $url) {
+        fputcsv($handle, [$url]);
+    }
+    fclose($handle);
+    echo "CSV-Datei wurde erfolgreich erstellt: $outputCsvFile\n";
+} else {
+    echo "Fehler beim Schreiben der CSV-Datei.\n";
+}
+```
+
 ## Nutzung der Skripte
 
 1. CSV-Datei erzeugen: Verwende ein Tool wie den "Screaming Frog SEO Spider", um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
@@ -163,7 +267,13 @@ module.exports =
 ddev exec php create-backstop-scenarios.php
 ```
 
-3. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
+3. Führe optional das PHP-Skript `crawler.php` aus, um eine CSV-Datei mit einer Liste der Referenz-URLs zu erstellen.
+```shell
+php crawler.php
+```
+Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
+
+4. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
 ```shell
 backstop reference --config ./backstop.js && backstop test --config ./backstop.js
 ```
