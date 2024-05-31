@@ -49,3 +49,16 @@ ddev exec php create-backstop-scenarios.php
 ```shell
 backstop reference --config ./backstop.js && backstop test --config ./backstop.js
 ```
+## In Projekten verwenden
+
+Das Repository kann auch direkt zum Testen von Projekten genutzt werden. Beispielhafte Vorgehensweise:
+
+1. Repository klonen
+2. `ddev start`
+3. Neuen Branch für Projekt erstellen: `git checkout -b projektname`
+4. `backstop init`
+5. Die dadurch erzeugte Datei `backstop.json` kann direkt gelöscht werden
+6. Dann die Referenz- und Test-Domains in den Dateien anpassen und wie oben beschrieben vorgehen
+7. Am Ende könnte man die erzeugten Dateien im Projekt-Branch committen: `git add . && git commit -m "Projektname getestet`
+8. Dann wieder in den main-Branch wechseln: `git checkout main`
+9. Wenn der Test-Branch nicht mehr benötigt wird, einfach löschen: `git branch -D projektname`
