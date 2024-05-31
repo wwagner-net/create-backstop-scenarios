@@ -45,4 +45,4 @@ foreach ($chunks as $index => $chunk) {
 }
 
 echo "JavaScript-Dateien wurden erfolgreich erstellt.\n";
-?>
+
