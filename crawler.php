@@ -35,7 +35,7 @@ function getUrls($domain) {
             }
 
             // Filter out URLs that are likely to be files (not pages)
-            if (preg_match('/\.(pdf|docx?|xlsx?|pptx?|jpg|jpeg|png|gif|mp4|mp3|zip|rar|7z|tar|gz|ico|svg|webmanifest)$/i', $url)) {
+            if (preg_match('/\.(pdf|docx?|xlsx?|pptx?|jpg|jpeg|png|gif|mp4|mp3|zip|rar|7z|tar|gz|ico|svg|webmanifest|xml)$/i', $url)) {
                 continue;
             }
 
