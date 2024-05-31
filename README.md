@@ -22,8 +22,8 @@ Dieses Skript liest die URLs aus einer CSV-Datei ein, teilt sie in Blöcke von j
 // Pfad zur CSV-Datei
 $csvFile = 'intern_html.csv';
 
-// Zieldomain anpassen
-$testDomain = 'https://example-symlink.ddev.site';
+// Testdomain anpassen
+$testDomain = 'https://example.ddev.site';
 
 // Referenz-Domain anpassen
 $referenceDomain = 'https://www.example.com';
