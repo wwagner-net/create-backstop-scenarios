@@ -37,7 +37,7 @@ ddev exec php crawler.php
 ```
 Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
 
-2. CSV-Datei erzeugen: Wenn du nicht die `crawper.php`verwendest, kannst du ein Tool wie den "Screaming Frog SEO Spider" nutzen, um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
+2. CSV-Datei erzeugen: Wenn du nicht die `crawler.php`verwendest, kannst du ein Tool wie den "Screaming Frog SEO Spider" nutzen, um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
 
 3. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
 
