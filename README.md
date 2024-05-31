@@ -259,19 +259,19 @@ if (($handle = fopen($outputCsvFile, 'w')) !== FALSE) {
 
 ## Nutzung der Skripte
 
-1. CSV-Datei erzeugen: Verwende ein Tool wie den "Screaming Frog SEO Spider", um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
+1. Führe optional das PHP-Skript `crawler.php` aus, um eine CSV-Datei mit einer Liste der Referenz-URLs zu erstellen.
+```shell
+ddev exec php crawler.php
+```
+Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
 
-2. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
+2. CSV-Datei erzeugen: Wenn du nicht die `crawper.php`verwendest, kannst du ein Tool wie den "Screaming Frog SEO Spider" nutzen, um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
+
+3. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
 
 ```shell
 ddev exec php create-backstop-scenarios.php
 ```
-
-3. Führe optional das PHP-Skript `crawler.php` aus, um eine CSV-Datei mit einer Liste der Referenz-URLs zu erstellen.
-```shell
-php crawler.php
-```
-Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
 
 4. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
 ```shell
