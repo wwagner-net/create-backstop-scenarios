@@ -1,63 +1,64 @@
+
 # BackstopJS Scenario Generator
 
-Dieses Repository enthält Skripte zur automatisierten Erzeugung von BackstopJS-Szenarien aus einer CSV-Datei mit URLs.
+This repository contains scripts for automatically generating BackstopJS scenarios from a CSV file with URLs.
 
-## Voraussetzungen
+## Prerequisites
 
-- PHP oder DDEV ist auf deinem System installiert.
-- Node.js ist auf deinem System installiert.
-- BackstopJS ist auf deinem System installiert.
+- PHP or DDEV is installed on your system.
+- Node.js is installed on your system.
+- BackstopJS is installed on your system.
 
-## Dateien
+## Files
 
-1. **PHP-Skript (create-backstop-scenarios.php)**
-2. **BackstopJS-Konfigurationsdatei (backstop.js)**
-3. **PHP-Crawler-Skript (crawler.php)**
+1. **PHP Script (create-backstop-scenarios.php)**
+2. **BackstopJS Configuration File (backstop.js)**
+3. **PHP Crawler Script (crawler.php)**
 
-### 1. PHP-Crawler-Skript (crawler.php)
+### 1. PHP Crawler Script (crawler.php)
 
-Dieses Skript crawlt die angegebene Referenz-Domain, extrahiert alle relevanten URLs und speichert sie in einer CSV-Datei. Es filtert dabei Links auf Dateien, JavaScript, tel:, mailto:, und URLs mit Parametern.
+This script crawls the specified reference domain, extracts all relevant URLs, and saves them in a CSV file. It filters out links to files, JavaScript, tel:, mailto:, and URLs with parameters.
 
-Es kann als Alternative zu Tools wie dem Screaming Frog SEO Spider genutzt werden:
+It can be used as an alternative to tools like the Screaming Frog SEO Spider.
 
-**Wichtig:** Die erzeugte CSV-Datei sollte überpfrüft und ggf. bereinigt werden. Es kann auch sein, dass die Liste der URLs nicht vollständig ist.
+**Important:** The generated CSV file should be reviewed and cleaned if necessary. It is also possible that the list of URLs is not complete.
 
-### 2. PHP-Skript (create-backstop-scenarios.php)
+### 2. PHP Script (create-backstop-scenarios.php)
 
-Dieses Skript liest die URLs aus einer CSV-Datei ein, teilt sie in Blöcke von jeweils 40 URLs auf und generiert JavaScript-Dateien, die diese URLs enthalten.
+This script reads the URLs from a CSV file, divides them into blocks of 40 URLs each, and generates JavaScript files containing these URLs.
 
-### 3. BackstopJS-Konfigurationsdatei (backstop.js)
-Diese Datei importiert die generierten JavaScript-Dateien und verwendet die URLs zur Konfiguration der BackstopJS-Szenarien.
+### 3. BackstopJS Configuration File (backstop.js)
+This file imports the generated JavaScript files and uses the URLs to configure the BackstopJS scenarios.
 
-## Nutzung der Skripte
+## Using the Scripts
 
-1. Führe optional das PHP-Skript `crawler.php` aus, um eine CSV-Datei mit einer Liste der Referenz-URLs zu erstellen.
+1. Optionally, run the PHP script `crawler.php` to create a CSV file with a list of reference URLs.
 ```shell
 ddev exec php crawler.php
 ```
-Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
+The collected URLs will be saved in the file `crawled_urls.csv`. You can then manually check and clean this file before using it for the tests.
 
-2. CSV-Datei erzeugen: Wenn du nicht die `crawler.php`verwendest, kannst du ein Tool wie den "Screaming Frog SEO Spider" nutzen, um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
-3. In der Datei `backstop.js` ggf. verschiedene Parameter anpassen, z.B. removeSelectors, delay etc.
-4. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
+2. Generate a CSV file: If you do not use `crawler.php`, you can use a tool like the "Screaming Frog SEO Spider" to generate a CSV file with URLs. Make sure the file contains only one column with valid URLs.
+3. Adjust various parameters in the `backstop.js` file if necessary, such as removeSelectors, delay, etc.
+4. Run the PHP script: Execute the PHP script to generate the JavaScript files.
 ```shell
 ddev exec php create-backstop-scenarios.php
 ```
-5. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
+5. Run BackstopJS scenarios: Execute the BackstopJS commands to create the reference images and start the tests.
 ```shell
 backstop reference --config ./backstop.js && backstop test --config ./backstop.js
 ```
-## In Projekten verwenden
+## Using in Projects
 
-Das Repository kann auch direkt zum Testen von Projekten genutzt werden. Beispielhafte Vorgehensweise:
+The repository can also be used directly to test projects. Example procedure:
 
-1. Repository klonen
+1. Clone the repository
 2. `ddev start`
-3. Neuen Branch für Projekt erstellen: `git checkout -b projektname`
+3. Create a new branch for the project: `git checkout -b projectname`
 4. `backstop init`
-5. Die dadurch erzeugte Datei `backstop.json` kann direkt gelöscht werden
-6. Dann die Referenz- und Test-Domains in den Dateien anpassen und wie oben beschrieben vorgehen
-7. In der backstop.js Test-Parameter prüfen und ggf. anpassen (dely, removeSelectors etc.)
-8. Am Ende könnte man die erzeugten Dateien im Projekt-Branch committen: `git add . && git commit -m "Projektname getestet`
-9. Dann wieder in den main-Branch wechseln: `git checkout main`
-10. Wenn der Test-Branch nicht mehr benötigt wird, einfach löschen: `git branch -D projektname`
+5. The file `backstop.json` created by this command can be deleted immediately
+6. Then adjust the reference and test domains in the files and proceed as described above
+7. Check and adjust test parameters in backstop.js if necessary (delay, removeSelectors, etc.)
+8. In the end, you could commit the generated files in the project branch: `git add . && git commit -m "Tested projectname"`
+9. Then switch back to the main branch: `git checkout main`
+10. If the test branch is no longer needed, simply delete it: `git branch -D projectname`

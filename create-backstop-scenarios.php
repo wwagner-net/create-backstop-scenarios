@@ -1,17 +1,17 @@
 <?php
-// Pfad zur CSV-Datei
+// Path to the CSV file
 $csvFile = 'crawled_urls.csv';
 
-// Testdomain anpassen
+// Adjust test domain
 $testDomain = 'https://example.ddev.site';
 
-// Referenz-Domain anpassen
+// Adjust reference domain
 $referenceDomain = 'https://www.example.com';
 
-// Array zum Speichern der URLs
+// Array to save the URLs
 $urls = [];
 
-// CSV-Datei einlesen
+// Import CSV file
 if (($handle = fopen($csvFile, "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
         $urls[] = $data[0];
@@ -19,10 +19,10 @@ if (($handle = fopen($csvFile, "r")) !== FALSE) {
     fclose($handle);
 }
 
-// URLs in Blöcke aufteilen
+// Split URLs into blocks
 $chunks = array_chunk($urls, 40);
 
-// JavaScript-Dateien erzeugen
+// Create JavaScript files
 foreach ($chunks as $index => $chunk) {
     $filename = 'scenarioUrls_' . ($index + 1) . '.js';
     $fileContent = "module.exports = {\n";
@@ -36,13 +36,13 @@ foreach ($chunks as $index => $chunk) {
         $fileContent .= "        },\n";
     }
 
-    // Entferne das letzte Komma und füge die schließende Klammer hinzu
+    // Remove the last comma and add the closing parenthesis
     $fileContent = rtrim($fileContent, ",\n") . "\n    ]\n";
     $fileContent .= "};\n";
 
-    // Datei schreiben
+    // Write file
     file_put_contents($filename, $fileContent);
 }
 
-echo "JavaScript-Dateien wurden erfolgreich erstellt.\n";
+echo "JavaScript files have been successfully created.\n";
 

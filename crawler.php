@@ -59,7 +59,7 @@ function getUrls($domain) {
         }
 
         $totalVisited++;
-        echo "Besuchte Seiten: $totalVisited, Noch zu besuchen: " . count($toVisit) . "\r";
+        echo "Pages visited: $totalVisited, Still to visit: " . count($toVisit) . "\r";
     }
 
     // Remove duplicates and sort
@@ -71,22 +71,22 @@ function getUrls($domain) {
     return $urls;
 }
 
-// Referenz-Domain anpassen
+// Adjust reference domain
 $referenceDomain = 'https://www.example.com';
 
-// URLs crawlen
+// Crawl URLs
 $urls = getUrls($referenceDomain);
 
-// Pfad zur Ausgabe-CSV-Datei
+// Path to the output CSV file
 $outputCsvFile = 'crawled_urls.csv';
 
-// CSV-Datei schreiben
+// Write CSV file
 if (($handle = fopen($outputCsvFile, 'w')) !== FALSE) {
     foreach ($urls as $url) {
         fputcsv($handle, [$url]);
     }
     fclose($handle);
-    echo "CSV-Datei wurde erfolgreich erstellt: $outputCsvFile\n";
+    echo "CSV file was successfully created: $outputCsvFile\n";
 } else {
-    echo "Fehler beim Schreiben der CSV-Datei.\n";
+    echo "Error when writing the CSV file.\n";
 }
