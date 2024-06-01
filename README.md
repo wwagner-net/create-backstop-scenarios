@@ -38,14 +38,12 @@ ddev exec php crawler.php
 Die gesammelten URLs werden in der Datei crawled_urls.csv gespeichert. Du kannst diese Datei dann manuell prüfen und bereinigen, bevor du sie für die Tests verwendest.
 
 2. CSV-Datei erzeugen: Wenn du nicht die `crawler.php`verwendest, kannst du ein Tool wie den "Screaming Frog SEO Spider" nutzen, um eine CSV-Datei mit URLs zu generieren. Stelle sicher, dass die Datei nur eine Spalte mit gültigen URLs enthält.
-
-3. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
-
+3. In der Datei `backstop.js` ggf. verschiedene Parameter anpassen, z.B. removeSelectors, delay etc.
+4. PHP-Skript ausführen: Führe das PHP-Skript aus, um die JavaScript-Dateien zu generieren.
 ```shell
 ddev exec php create-backstop-scenarios.php
 ```
-
-4. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
+5. BackstopJS-Szenarien ausführen: Führe die BackstopJS-Befehle aus, um die Referenzbilder zu erstellen und die Tests zu starten.
 ```shell
 backstop reference --config ./backstop.js && backstop test --config ./backstop.js
 ```
@@ -59,6 +57,7 @@ Das Repository kann auch direkt zum Testen von Projekten genutzt werden. Beispie
 4. `backstop init`
 5. Die dadurch erzeugte Datei `backstop.json` kann direkt gelöscht werden
 6. Dann die Referenz- und Test-Domains in den Dateien anpassen und wie oben beschrieben vorgehen
-7. Am Ende könnte man die erzeugten Dateien im Projekt-Branch committen: `git add . && git commit -m "Projektname getestet`
-8. Dann wieder in den main-Branch wechseln: `git checkout main`
-9. Wenn der Test-Branch nicht mehr benötigt wird, einfach löschen: `git branch -D projektname`
+7. In der backstop.js Test-Parameter prüfen und ggf. anpassen (dely, removeSelectors etc.)
+8. Am Ende könnte man die erzeugten Dateien im Projekt-Branch committen: `git add . && git commit -m "Projektname getestet`
+9. Dann wieder in den main-Branch wechseln: `git checkout main`
+10. Wenn der Test-Branch nicht mehr benötigt wird, einfach löschen: `git branch -D projektname`
