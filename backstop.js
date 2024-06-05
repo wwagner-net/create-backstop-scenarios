@@ -4,11 +4,28 @@
 // Run test:
 // backstop test --config ./backstop.js
 
-const scenarioUrls1 = require('./scenarioUrls_1.js').scenarioUrls;
-const scenarioUrls2 = require('./scenarioUrls_2.js').scenarioUrls;
-// und so weiter
+const fs = require('fs');
+const path = require('path');
 
-const allScenarioUrls = [...scenarioUrls1, ...scenarioUrls2];
+// Path to the directory in which the scenarioUrls files are stored
+const scenariosDir = path.resolve(__dirname);
+
+// Function to load all files that match the name pattern
+function loadScenarioUrls() {
+    const scenarioUrls = [];
+    const files = fs.readdirSync(scenariosDir);
+
+    files.forEach(file => {
+        if (file.match(/^scenarioUrls_\d+\.js$/)) {
+            const scenarioModule = require(path.join(scenariosDir, file)).scenarioUrls;
+            scenarioUrls.push(...scenarioModule);
+        }
+    });
+
+    return scenarioUrls;
+}
+
+const allScenarioUrls = loadScenarioUrls();
 
 var scenarios = allScenarioUrls.map(function (scenarioUrl) {
     return {
