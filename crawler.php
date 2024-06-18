@@ -44,6 +44,11 @@ function getUrls($domain) {
                 continue;
             }
 
+            // Filter out URLs with anchors
+            if (strpos($url, '#') !== false) {
+                continue;
+            }
+
             // Filter out tel:, mailto:, and javascript: links
             if (strpos($url, 'tel:') !== false || strpos($url, 'mailto:') !== false || strpos($url, 'javascript:') !== false) {
                 continue;
