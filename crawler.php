@@ -71,8 +71,24 @@ function getUrls($domain) {
     return $urls;
 }
 
-// Adjust reference domain
-$referenceDomain = 'https://www.example.com';
+// Funktion zur Verarbeitung der Befehlszeilenargumente
+function getArguments() {
+    $shortopts = "";
+    $longopts  = array(
+        "url:",     // Erforderliches Argument
+    );
+    $options = getopt($shortopts, $longopts);
+
+    if (!isset($options['url'])) {
+        echo "Usage: php crawler.php --url <URL>\n";
+        exit(1);
+    }
+
+    return $options['url'];
+}
+
+// Hole die Domain aus den Argumenten
+$referenceDomain = getArguments();
 
 // Crawl URLs
 $urls = getUrls($referenceDomain);
