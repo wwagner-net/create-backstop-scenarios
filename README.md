@@ -21,20 +21,27 @@ This script crawls the specified reference domain, extracts all relevant URLs, a
 
 It can be used as an alternative to tools like the Screaming Frog SEO Spider.
 
-**Important:** The generated CSV file should be reviewed and cleaned if necessary. It is also possible that the list of URLs is not complete.
+**Usage:** You can now specify the domain to crawl directly via a command-line parameter.
+
+```shell
+ddev exec php crawler.php --url https://referencedomain.com
+```
+
+The collected URLs will be saved in the file `crawled_urls.csv`. Make sure to manually review and clean this file if necessary, as the list of URLs might not be complete.
 
 ### 2. PHP Script (create-backstop-scenarios.php)
 
 This script reads the URLs from a CSV file, divides them into blocks of 40 URLs each, and generates JavaScript files containing these URLs.
 
 ### 3. BackstopJS Configuration File (backstop.js)
+
 This file imports the generated JavaScript files and uses the URLs to configure the BackstopJS scenarios.
 
 ## Using the Scripts
 
 1. Optionally, run the PHP script `crawler.php` to create a CSV file with a list of reference URLs.
 ```shell
-ddev exec php crawler.php
+ddev exec php crawler.php --url https://referencedomain.com
 ```
 The collected URLs will be saved in the file `crawled_urls.csv`. You can then manually check and clean this file before using it for the tests.
 
