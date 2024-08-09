@@ -5,9 +5,9 @@ This repository contains scripts for automatically generating BackstopJS scenari
 
 ## Prerequisites
 
-- PHP or DDEV is installed on your system.
+- PHP or [DDEV](https://ddev.com/) is installed on your system.
 - Node.js is installed on your system.
-- BackstopJS is installed on your system.
+- [BackstopJS](https://github.com/garris/BackstopJS) is installed on your system.
 
 ## Files
 
