@@ -19,7 +19,7 @@ This repository contains scripts for automatically generating BackstopJS scenari
 
 This script crawls the specified reference domain, extracts all relevant URLs, and saves them in a CSV file. It filters out links to files, JavaScript, tel:, mailto:, and URLs with parameters.
 
-It can be used as an alternative to tools like the Screaming Frog SEO Spider.
+It can be used as an alternative to tools like the Screaming Frog SEO Spider..
 
 **Usage:** You can now specify the domain to crawl directly via a command-line parameter.
 
