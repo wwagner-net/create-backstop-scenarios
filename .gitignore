@@ -36,6 +36,7 @@ Temporary Items
 
 .idea
 .vscode
+.claude
 
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm,macos
 backstop_data/

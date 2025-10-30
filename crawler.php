@@ -127,6 +127,190 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
 }
 
 /**
+ * Get URLs from sitemap.xml
+ */
+function getSitemapUrls($sitemapUrl, $domain, $maxUrls = MAX_URLS, $csvHandle = null) {
+    $visited = [];
+    $urlCount = 0;
+    $errorLog = [];
+
+    echo "Starting sitemap parser...\n";
+    echo "Sitemap URL: $sitemapUrl\n";
+    echo "Max URLs: $maxUrls\n";
+
+    if ($csvHandle !== null) {
+        echo "Writing URLs to CSV in real-time...\n";
+    }
+    echo "\n";
+
+    // Parse the sitemap (handles both sitemap index and regular sitemaps)
+    $urls = parseSitemap($sitemapUrl, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
+
+    echo "\n\n";
+    echo "Sitemap parsing complete!\n";
+    echo "Total URLs found: $urlCount\n";
+    echo "Errors encountered: " . count($errorLog) . "\n";
+
+    if (!empty($errorLog)) {
+        echo "\n--- Errors ---\n";
+        foreach ($errorLog as $error) {
+            echo "  - " . $error['reason'] . ": " . $error['url'] . "\n";
+        }
+    }
+
+    echo "\n";
+
+    return [
+        'urlCount' => $urlCount,
+        'visited' => 0,
+        'errors' => $errorLog
+    ];
+}
+
+/**
+ * Parse a sitemap XML file (handles both sitemap index and regular sitemaps)
+ */
+function parseSitemap($sitemapUrl, $domain, $maxUrls, &$urlCount, &$visited, &$errorLog, $csvHandle = null) {
+    // Fetch sitemap content
+    $result = fetchUrl($sitemapUrl);
+
+    if ($result['success'] === false) {
+        $errorLog[] = [
+            'url' => $sitemapUrl,
+            'reason' => $result['error']
+        ];
+        echo "[ERROR] Could not fetch sitemap: " . $result['error'] . "\n";
+        return [];
+    }
+
+    $xml = $result['content'];
+
+    // Try to parse XML
+    libxml_use_internal_errors(true);
+    $dom = new DOMDocument();
+    $loaded = @$dom->loadXML($xml);
+
+    if (!$loaded) {
+        $errorLog[] = [
+            'url' => $sitemapUrl,
+            'reason' => 'Invalid XML format'
+        ];
+        echo "[ERROR] Invalid XML format in sitemap\n";
+        return [];
+    }
+
+    // Check if it's a sitemap index (contains <sitemapindex>)
+    $sitemapIndexElements = $dom->getElementsByTagName('sitemapindex');
+
+    if ($sitemapIndexElements->length > 0) {
+        echo "Detected sitemap index, processing sub-sitemaps...\n";
+        return parseSitemapIndex($dom, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
+    }
+
+    // It's a regular sitemap, extract URLs
+    echo "Processing sitemap: $sitemapUrl\n";
+    return extractUrlsFromSitemap($dom, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
+}
+
+/**
+ * Parse a sitemap index and process all sub-sitemaps
+ */
+function parseSitemapIndex($dom, $domain, $maxUrls, &$urlCount, &$visited, &$errorLog, $csvHandle = null) {
+    $urls = [];
+    $sitemapElements = $dom->getElementsByTagName('sitemap');
+
+    echo "Found " . $sitemapElements->length . " sub-sitemap(s)\n\n";
+
+    foreach ($sitemapElements as $sitemapElement) {
+        if ($urlCount >= $maxUrls) {
+            echo "Max URLs reached ($maxUrls), stopping...\n";
+            break;
+        }
+
+        $locElements = $sitemapElement->getElementsByTagName('loc');
+        if ($locElements->length > 0) {
+            $subSitemapUrl = trim($locElements->item(0)->nodeValue);
+
+            // Recursively parse the sub-sitemap
+            echo "Loading sub-sitemap: $subSitemapUrl\n";
+            $subUrls = parseSitemap($subSitemapUrl, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
+            $urls = array_merge($urls, $subUrls);
+        }
+    }
+
+    return $urls;
+}
+
+/**
+ * Extract URLs from a regular sitemap
+ */
+function extractUrlsFromSitemap($dom, $domain, $maxUrls, &$urlCount, &$visited, &$errorLog, $csvHandle = null) {
+    $urls = [];
+    $urlElements = $dom->getElementsByTagName('url');
+
+    echo "Processing " . $urlElements->length . " URLs from sitemap...\n";
+
+    foreach ($urlElements as $urlElement) {
+        if ($urlCount >= $maxUrls) {
+            echo "\nMax URLs reached ($maxUrls), stopping...\n";
+            break;
+        }
+
+        $locElements = $urlElement->getElementsByTagName('loc');
+        if ($locElements->length > 0) {
+            $url = trim($locElements->item(0)->nodeValue);
+
+            // Normalize URL
+            $normalizedUrl = normalizeUrl($url);
+
+            if (!$normalizedUrl) {
+                continue;
+            }
+
+            // Filter: Check if URL belongs to the domain
+            if ($domain && strpos($normalizedUrl, $domain) !== 0) {
+                continue;
+            }
+
+            // Filter: Skip file URLs
+            if (isFileUrl($normalizedUrl)) {
+                continue;
+            }
+
+            // Filter: Skip special protocols
+            if (isSpecialProtocol($normalizedUrl)) {
+                continue;
+            }
+
+            // Check for duplicates
+            if (isset($visited[$normalizedUrl])) {
+                continue;
+            }
+
+            $visited[$normalizedUrl] = true;
+
+            // Write to CSV immediately if handle is provided
+            if ($csvHandle !== null) {
+                fputcsv($csvHandle, [$normalizedUrl]);
+                fflush($csvHandle);
+            }
+
+            $urlCount++;
+            $urls[] = $normalizedUrl;
+
+            // Progress indicator
+            if ($urlCount % 100 == 0) {
+                echo "\rURLs processed: $urlCount    ";
+            }
+        }
+    }
+
+    echo "\rURLs processed: $urlCount    \n";
+
+    return $urls;
+}
+
+/**
  * Show error summary with categorized errors
  */
 function showErrorSummary($errorLog, $totalVisited) {
@@ -479,6 +663,7 @@ function getArguments() {
     $shortopts = "";
     $longopts = [
         "url:",
+        "sitemap:",
         "output:",
         "max-depth::",
         "max-urls::",
@@ -495,9 +680,16 @@ function getArguments() {
         exit(0);
     }
 
-    // Validate required arguments
-    if (!isset($options['url'])) {
-        echo "Error: --url parameter is required.\n\n";
+    // Validate required arguments - either --url OR --sitemap
+    if (!isset($options['url']) && !isset($options['sitemap'])) {
+        echo "Error: Either --url or --sitemap parameter is required.\n\n";
+        showHelp();
+        exit(1);
+    }
+
+    // Ensure only one mode is used
+    if (isset($options['url']) && isset($options['sitemap'])) {
+        echo "Error: Cannot use both --url and --sitemap. Choose one mode.\n\n";
         showHelp();
         exit(1);
     }
@@ -509,22 +701,30 @@ function getArguments() {
  * Show help message
  */
 function showHelp() {
-    echo "BackstopJS URL Crawler\n\n";
+    echo "BackstopJS URL Crawler & Sitemap Parser\n\n";
     echo "Usage: ddev exec php crawler.php [options]\n\n";
-    echo "Required:\n";
-    echo "  --url=URL               Domain to crawl (e.g., https://www.example.com)\n\n";
+    echo "Required (choose one):\n";
+    echo "  --url=URL               Domain to crawl (e.g., https://www.example.com)\n";
+    echo "  --sitemap=URL           Parse sitemap.xml instead of crawling\n";
+    echo "                          (e.g., https://www.example.com/sitemap.xml)\n\n";
     echo "Optional:\n";
     echo "  --output=FILE           Output CSV file (default: crawled_urls.csv)\n";
-    echo "  --max-depth=N           Maximum crawl depth (default: unlimited)\n";
-    echo "  --max-urls=N            Maximum URLs to crawl (default: 10000)\n";
+    echo "  --max-depth=N           Maximum crawl depth (crawler only, default: unlimited)\n";
+    echo "  --max-urls=N            Maximum URLs to process (default: 10000)\n";
     echo "  --include-params        Include URLs with query parameters\n";
-    echo "  --verbose               Show detailed error messages during crawling\n";
+    echo "  --verbose               Show detailed error messages (crawler only)\n";
     echo "  --help                  Show this help message\n\n";
     echo "Examples:\n";
-    echo "  ddev exec php crawler.php --url=https://www.example.com\n";
-    echo "  ddev exec php crawler.php --url=https://www.example.com --output=urls.csv\n";
-    echo "  ddev exec php crawler.php --url=https://www.example.com --max-urls=500\n";
-    echo "  ddev exec php crawler.php --url=https://www.example.com --verbose\n\n";
+    echo "  # Crawl a website\n";
+    echo "  ddev exec php crawler.php --url=https://www.example.com\n\n";
+    echo "  # Parse a sitemap.xml (much faster!)\n";
+    echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml\n\n";
+    echo "  # Parse sitemap with custom output\n";
+    echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml --output=urls.csv\n\n";
+    echo "  # Limit URLs from sitemap\n";
+    echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml --max-urls=500\n\n";
+    echo "Note: Sitemap parsing supports both regular sitemaps and sitemap index files.\n";
+    echo "      It will automatically follow and parse all referenced sub-sitemaps.\n\n";
 }
 
 /**
@@ -554,46 +754,89 @@ function validateUrl($url) {
 // Parse command line arguments
 $options = getArguments();
 
-// Get and validate URL
-$referenceDomain = rtrim($options['url'], '/');
-validateUrl($referenceDomain);
-
 // Get optional parameters
 $outputFile = $options['output'] ?? 'crawled_urls.csv';
-$maxDepth = isset($options['max-depth']) ? (int)$options['max-depth'] : null;
 $maxUrls = isset($options['max-urls']) ? (int)$options['max-urls'] : MAX_URLS;
 $includeParams = isset($options['include-params']);
-$verbose = isset($options['verbose']);
 
-// Test if domain is reachable
-echo "Testing connection to $referenceDomain...\n";
-$testResult = fetchUrl($referenceDomain);
-if ($testResult['success'] === false) {
-    echo "Error: Could not connect to $referenceDomain\n";
-    echo "Reason: " . $testResult['error'] . "\n\n";
-    echo "Please check:\n";
-    echo "  - Is the URL correct?\n";
-    echo "  - Is the website online?\n";
-    echo "  - Do you have internet connection?\n";
-    exit(1);
+// Determine mode: crawler or sitemap
+if (isset($options['url'])) {
+    // ========== CRAWLER MODE ==========
+    $referenceDomain = rtrim($options['url'], '/');
+    validateUrl($referenceDomain);
+
+    $maxDepth = isset($options['max-depth']) ? (int)$options['max-depth'] : null;
+    $verbose = isset($options['verbose']);
+
+    // Test if domain is reachable
+    echo "Testing connection to $referenceDomain...\n";
+    $testResult = fetchUrl($referenceDomain);
+    if ($testResult['success'] === false) {
+        echo "Error: Could not connect to $referenceDomain\n";
+        echo "Reason: " . $testResult['error'] . "\n\n";
+        echo "Please check:\n";
+        echo "  - Is the URL correct?\n";
+        echo "  - Is the website online?\n";
+        echo "  - Do you have internet connection?\n";
+        exit(1);
+    }
+    echo "Connection successful!\n\n";
+
+    // Open CSV file for writing BEFORE crawling
+    $csvHandle = fopen($outputFile, 'w');
+    if ($csvHandle === false) {
+        echo "Error: Could not create file: $outputFile\n";
+        exit(1);
+    }
+
+    echo "Writing URLs to: $outputFile\n\n";
+
+    // Crawl URLs and write to CSV in real-time
+    $result = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose, $csvHandle);
+
+    // Close CSV file
+    fclose($csvHandle);
+
+} else {
+    // ========== SITEMAP MODE ==========
+    $sitemapUrl = $options['sitemap'];
+    validateUrl($sitemapUrl);
+
+    // Extract domain from sitemap URL for filtering
+    $parsed = parse_url($sitemapUrl);
+    $referenceDomain = $parsed['scheme'] . '://' . $parsed['host'];
+
+    // Test if sitemap is reachable
+    echo "Testing connection to sitemap...\n";
+    $testResult = fetchUrl($sitemapUrl);
+    if ($testResult['success'] === false) {
+        echo "Error: Could not fetch sitemap from $sitemapUrl\n";
+        echo "Reason: " . $testResult['error'] . "\n\n";
+        echo "Please check:\n";
+        echo "  - Is the sitemap URL correct?\n";
+        echo "  - Is the sitemap accessible?\n";
+        echo "  - Do you have internet connection?\n";
+        exit(1);
+    }
+    echo "Connection successful!\n\n";
+
+    // Open CSV file for writing BEFORE parsing
+    $csvHandle = fopen($outputFile, 'w');
+    if ($csvHandle === false) {
+        echo "Error: Could not create file: $outputFile\n";
+        exit(1);
+    }
+
+    echo "Writing URLs to: $outputFile\n\n";
+
+    // Parse sitemap and write to CSV in real-time
+    $result = getSitemapUrls($sitemapUrl, $referenceDomain, $maxUrls, $csvHandle);
+
+    // Close CSV file
+    fclose($csvHandle);
 }
-echo "Connection successful!\n\n";
 
-// Open CSV file for writing BEFORE crawling
-$csvHandle = fopen($outputFile, 'w');
-if ($csvHandle === false) {
-    echo "Error: Could not create file: $outputFile\n";
-    exit(1);
-}
-
-echo "Writing URLs to: $outputFile\n\n";
-
-// Crawl URLs and write to CSV in real-time
-$result = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose, $csvHandle);
-
-// Close CSV file
-fclose($csvHandle);
-
+// Check if any URLs were found
 if ($result['urlCount'] === 0) {
     echo "Warning: No URLs found!\n";
     unlink($outputFile); // Delete empty file

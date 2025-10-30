@@ -14,7 +14,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 ### Security
 
-## [1.0.0] - 2025-01-30
+## [1.1.0] - 2025-10-31
+
+### Added
+- **Sitemap parsing mode for crawler.php**
+  - New `--sitemap=URL` parameter as alternative to `--url` crawling
+  - Parses sitemap.xml files (much faster than crawling)
+  - Supports both regular sitemaps and sitemap index files
+  - Automatically follows and parses all referenced sub-sitemaps
+  - Applies same filtering as crawler (file URLs, special protocols, query parameters)
+  - Real-time CSV streaming (same as crawler mode)
+  - Ideal for large websites with comprehensive sitemaps
+
+### Changed
+- Updated help message and documentation to include sitemap mode
+- CLI argument validation now ensures only one mode (--url or --sitemap) is used
+
+## [1.0.0] - 2025-10-30
 
 ### Added
 - Initial release of BackstopJS Scenario Generator
@@ -71,4 +87,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+[1.1.0]: https://github.com/yourusername/create-backstop-scenarios/releases/tag/v1.1.0
 [1.0.0]: https://github.com/yourusername/create-backstop-scenarios/releases/tag/v1.0.0

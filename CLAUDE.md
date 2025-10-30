@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Current Version:** 1.0.0
+**Current Version:** 1.1.0
 
 ## Version Management
 
@@ -58,7 +58,9 @@ This is a BackstopJS scenario generator tool that automates visual regression te
 ### Four-Phase Workflow with Queue Management
 
 1. **URL Collection (crawler.php)**
-   - Crawls a reference domain recursively
+   - Two modes: sitemap parsing (fast) or recursive crawling
+   - **Sitemap mode**: Parses sitemap.xml and sitemap index files
+   - **Crawler mode**: Crawls a reference domain recursively
    - Extracts and filters URLs (excludes files, parameters, anchors, tel/mailto links)
    - Outputs to `crawled_urls.csv`
 
@@ -112,23 +114,32 @@ backstop init  # Creates backstop_data structure (backstop.json can be deleted)
 
 ### Complete Workflow (Recommended)
 
-1. **Crawl Reference Domain**
+1. **Collect URLs from Reference Domain**
+
+**Option A: Parse Sitemap (Faster!)**
+```bash
+ddev exec php crawler.php --sitemap https://referencedomain.com/sitemap.xml
+```
+
+**Option B: Crawl Website**
 ```bash
 ddev exec php crawler.php --url https://referencedomain.com
 ```
+
 Creates `crawled_urls.csv` in the root directory.
 
-**Crawler options:**
+**Options (both modes):**
 - `--max-urls=N`: Limit number of URLs (default: 10000)
 - `--output=FILE`: Custom output file (default: crawled_urls.csv)
 - `--include-params`: Include URLs with query parameters
-- `--verbose`: Show detailed error messages during crawling
+- `--verbose`: Show detailed error messages (crawler mode only)
 - `--help`: Show help
 
-**Important crawler features:**
-- Streams URLs directly to CSV (no memory issues with large sites)
+**Important features:**
+- Sitemap mode: Parses sitemap index files and follows all sub-sitemaps
+- Crawler mode: Streams URLs directly to CSV (no memory issues with large sites)
 - Smart URL filtering (tel:, mailto:, javascript:, etc.)
-- Detailed error reporting with categorization
+- Detailed error reporting with categorization (crawler mode)
 - Real-time progress display
 
 2. **Generate Scenario Files**
