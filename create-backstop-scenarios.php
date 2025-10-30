@@ -1,18 +1,83 @@
 <?php
+
+/**
+ * Parse command line arguments
+ */
+function getArguments() {
+    global $argv;
+
+    $shortopts = "";
+    $longopts = array(
+        "test:",        // Test domain (optional)
+        "reference:",   // Reference domain (optional)
+        "csv:",         // CSV file path (optional)
+    );
+    $options = getopt($shortopts, $longopts);
+
+    // Show help if --help is provided
+    if (in_array('--help', $argv)) {
+        showHelp();
+        exit(0);
+    }
+
+    return $options;
+}
+
+/**
+ * Show help message
+ */
+function showHelp() {
+    echo "BackstopJS Scenario Generator\n\n";
+    echo "Usage: ddev exec php create-backstop-scenarios.php [options]\n\n";
+    echo "Options:\n";
+    echo "  --csv=FILE              Path to CSV file with URLs (default: crawled_urls.csv)\n";
+    echo "  --test=URL              Test domain URL (required)\n";
+    echo "  --reference=URL         Reference domain URL (required)\n";
+    echo "  --help                  Show this help message\n\n";
+    echo "Example:\n";
+    echo "  ddev exec php create-backstop-scenarios.php \\\n";
+    echo "    --test=https://example.ddev.site \\\n";
+    echo "    --reference=https://www.example.com\n\n";
+}
+
+// Parse arguments
+$options = getArguments();
+
 // Path to the CSV file
-$csvFile = 'crawled_urls.csv';
+$csvFile = $options['csv'] ?? 'crawled_urls.csv';
 
-// Adjust test domain
-$testDomain = 'https://cobra.ddev.site';
+// Get domains from arguments
+if (!isset($options['test']) || !isset($options['reference'])) {
+    echo "Error: Both --test and --reference domains are required.\n\n";
+    showHelp();
+    exit(1);
+}
 
-// Adjust reference domain
-$referenceDomain = 'https://www.cobra.de';
+$testDomain = rtrim($options['test'], '/');
+$referenceDomain = rtrim($options['reference'], '/');
+
+// Validate URLs
+if (!filter_var($testDomain, FILTER_VALIDATE_URL)) {
+    echo "Error: Invalid test domain URL: $testDomain\n";
+    exit(1);
+}
+
+if (!filter_var($referenceDomain, FILTER_VALIDATE_URL)) {
+    echo "Error: Invalid reference domain URL: $referenceDomain\n";
+    exit(1);
+}
 
 // Output directory for scenario files
 $outputDir = 'scenarios/pending';
 
 // Array to save the URLs
 $urls = [];
+
+echo "Configuration:\n";
+echo "  CSV File:         $csvFile\n";
+echo "  Test Domain:      $testDomain\n";
+echo "  Reference Domain: $referenceDomain\n";
+echo "  Output Directory: $outputDir\n\n";
 
 // Create directory structure if it doesn't exist
 if (!file_exists('scenarios/pending')) {
@@ -25,12 +90,25 @@ if (!file_exists('scenarios/done')) {
     mkdir('scenarios/done', 0755, true);
 }
 
+// Check if CSV file exists
+if (!file_exists($csvFile)) {
+    echo "Error: CSV file not found: $csvFile\n";
+    echo "Please run the crawler first:\n";
+    echo "  ddev exec php crawler.php --url $referenceDomain\n";
+    exit(1);
+}
+
 // Import CSV file
 if (($handle = fopen($csvFile, "r")) !== FALSE) {
     while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
         $urls[] = $data[0];
     }
     fclose($handle);
+}
+
+if (empty($urls)) {
+    echo "Error: No URLs found in CSV file: $csvFile\n";
+    exit(1);
 }
 
 // Split URLs into blocks

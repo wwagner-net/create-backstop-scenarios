@@ -1,71 +1,275 @@
-
 # BackstopJS Scenario Generator
 
-This repository contains scripts for automatically generating BackstopJS scenarios from a CSV file with URLs.
+Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
+
+## Features
+
+- 🕷️ **Automated URL Crawling**: Recursively crawl websites and extract all relevant URLs
+- 📦 **Batch Management**: Process large websites in manageable chunks (40 URLs per batch)
+- 🎯 **Smart Queue System**: Only test one batch at a time for optimal performance
+- 🔄 **Workflow Automation**: Easy-to-use commands for the entire test lifecycle
+- 📊 **Progress Tracking**: Always know which scenarios are pending, active, or completed
 
 ## Prerequisites
 
-- PHP or [DDEV](https://ddev.com/) is installed on your system.
-- Node.js is installed on your system.
-- [BackstopJS](https://github.com/garris/BackstopJS) is installed on your system.
+- [DDEV](https://ddev.com/) installed on your system (or PHP 8.2+)
+- [Node.js](https://nodejs.org/) installed on your system
+- [BackstopJS](https://github.com/garris/BackstopJS) installed globally: `npm install -g backstopjs`
 
-## Files
+## Quick Start
 
-1. **PHP Script (create-backstop-scenarios.php)**
-2. **BackstopJS Configuration File (backstop.js)**
-3. **PHP Crawler Script (crawler.php)**
+### 1. Setup
+```bash
+# Clone and start DDEV
+ddev start
 
-### 1. PHP Crawler Script (crawler.php)
-
-This script crawls the specified reference domain, extracts all relevant URLs, and saves them in a CSV file. It filters out links to files, JavaScript, tel:, mailto:, and URLs with parameters.
-
-It can be used as an alternative to tools like the Screaming Frog SEO Spider.
-
-**Usage:** You can now specify the domain to crawl directly via a command-line parameter.
-
-```shell
-ddev exec php crawler.php --url https://referencedomain.com
+# Initialize BackstopJS (creates directory structure)
+backstop init
+# Note: You can delete the generated backstop.json file
 ```
 
-The collected URLs will be saved in the file `crawled_urls.csv`. Make sure to manually review and clean this file if necessary, as the list of URLs might not be complete.
-
-### 2. PHP Script (create-backstop-scenarios.php)
-
-This script reads the URLs from a CSV file, divides them into blocks of 40 URLs each, and generates JavaScript files containing these URLs.
-
-### 3. BackstopJS Configuration File (backstop.js)
-
-This file imports the generated JavaScript files and uses the URLs to configure the BackstopJS scenarios.
-
-## Using the Scripts
-
-1. Optionally, run the PHP script `crawler.php` to create a CSV file with a list of reference URLs.
-```shell
-ddev exec php crawler.php --url https://referencedomain.com
+### 2. Crawl Your Website
+```bash
+ddev exec php crawler.php --url https://www.example.com
 ```
-The collected URLs will be saved in the file `crawled_urls.csv`. You can then manually check and clean this file before using it for the tests.
+This creates `crawled_urls.csv` with all discovered URLs.
 
-2. Generate a CSV file: If you do not use `crawler.php`, you can use a tool like the "Screaming Frog SEO Spider" to generate a CSV file with URLs. Make sure the file contains only one column with valid URLs.
-3. Adjust various parameters in the `backstop.js` file if necessary, such as removeSelectors, delay, etc.
-4. Run the PHP script: Execute the PHP script to generate the JavaScript files.
-```shell
-ddev exec php create-backstop-scenarios.php
+### 3. Generate Test Scenarios
+```bash
+ddev exec php create-backstop-scenarios.php \
+  --test=https://example.ddev.site \
+  --reference=https://www.example.com
 ```
-5. Run BackstopJS scenarios: Execute the BackstopJS commands to create the reference images and start the tests.
-```shell
-backstop reference --config ./backstop.js && backstop test --config ./backstop.js
+This creates scenario files in `scenarios/pending/` directory.
+
+### 4. Process Scenarios
+
+#### Option A: Manual Mode (Step-by-Step)
+```bash
+# Activate next scenario
+ddev exec php manage-scenarios.php next
+
+# Run tests
+backstop reference --config ./backstop.js
+backstop test --config ./backstop.js
+
+# Review results in browser
+backstop openReport
+
+# Mark as done and move to next
+ddev exec php manage-scenarios.php done
+
+# Repeat until all scenarios are processed
 ```
-## Using in Projects
 
-The repository can also be used directly to test projects. Example procedure:
+#### Option B: Auto Mode (Interactive)
+```bash
+ddev exec php manage-scenarios.php auto
+```
+This guides you through all scenarios interactively.
 
-1. Clone the repository
-2. `ddev start`
-3. Create a new branch for the project: `git checkout -b projectname`
-4. `backstop init`
-5. The file `backstop.json` created by this command can be deleted immediately
-6. Then adjust the reference and test domains in the files and proceed as described above
-7. Check and adjust test parameters in backstop.js if necessary (delay, removeSelectors, etc.)
-8. In the end, you could commit the generated files in the project branch: `git add . && git commit -m "Tested projectname"`
-9. Then switch back to the main branch: `git checkout main`
-10. If the test branch is no longer needed, simply delete it: `git branch -D projectname`
+## Scripts Overview
+
+### 1. crawler.php
+Crawls a website and extracts all page URLs.
+
+**Features:**
+- Recursive crawling
+- Filters out files (PDF, images, etc.)
+- Excludes URLs with parameters or anchors
+- Removes tel:, mailto:, and javascript: links
+
+**Usage:**
+```bash
+ddev exec php crawler.php --url https://www.example.com
+```
+
+**Output:** `crawled_urls.csv`
+
+### 2. create-backstop-scenarios.php
+Generates BackstopJS scenario files from the CSV.
+
+**Features:**
+- Splits URLs into batches of 40
+- Maps reference URLs to test URLs
+- Creates organized directory structure
+- Validates input and provides helpful error messages
+
+**Usage:**
+```bash
+ddev exec php create-backstop-scenarios.php \
+  --test=https://example.ddev.site \
+  --reference=https://www.example.com \
+  [--csv=custom_urls.csv]
+```
+
+**Options:**
+- `--test` (required): Your test domain
+- `--reference` (required): The reference/production domain
+- `--csv` (optional): Path to CSV file (default: crawled_urls.csv)
+- `--help`: Show help message
+
+**Output:** Scenario files in `scenarios/pending/`
+
+### 3. manage-scenarios.php
+Manages the scenario workflow and keeps track of progress.
+
+**Commands:**
+```bash
+# Show current status
+ddev exec php manage-scenarios.php status
+
+# Move next scenario to active
+ddev exec php manage-scenarios.php next
+
+# Mark current scenario as done
+ddev exec php manage-scenarios.php done
+
+# Skip current scenario
+ddev exec php manage-scenarios.php skip
+
+# List all scenarios with details
+ddev exec php manage-scenarios.php list
+
+# Reset all scenarios to pending
+ddev exec php manage-scenarios.php reset
+
+# Interactive auto mode
+ddev exec php manage-scenarios.php auto
+
+# Show help
+ddev exec php manage-scenarios.php help
+```
+
+**Scenario States:**
+- **pending**: Waiting to be tested
+- **active**: Currently being tested (only one at a time)
+- **done**: Completed and archived with timestamp
+
+### 4. backstop.js
+BackstopJS configuration that loads scenarios from `scenarios/active/`.
+
+**Key Settings:**
+- `removeSelectors`: Elements to remove (e.g., cookie banners)
+- `delay`: Wait time before screenshots (default: 5000ms)
+- `misMatchThreshold`: Acceptable difference percentage (default: 10%)
+- `viewports`: Phone, tablet, desktop
+- `asyncCaptureLimit`: Parallel screenshots (default: 5)
+
+## Configuration
+
+### Customize Test Parameters
+Edit `backstop.js` to adjust:
+- `removeSelectors`: Hide cookie banners, popups, etc.
+- `delay`: Increase for slow-loading pages
+- `misMatchThreshold`: Adjust sensitivity
+- `viewports`: Add/remove screen sizes
+- `hideSelectors`: Temporarily hide elements
+
+Example:
+```javascript
+"removeSelectors": ["#CybotCookiebotDialog", ".cookie-banner"],
+"delay": 5000,
+"misMatchThreshold": 10,
+```
+
+## Project-Based Testing
+
+Test different projects using branches:
+
+```bash
+# Create project branch
+git checkout -b projectname
+
+# Adjust backstop.js settings for this project
+# (removeSelectors, delay, etc.)
+
+# Run the workflow
+ddev exec php crawler.php --url https://www.project.com
+ddev exec php create-backstop-scenarios.php \
+  --test=https://project.ddev.site \
+  --reference=https://www.project.com
+
+# Process all scenarios
+ddev exec php manage-scenarios.php auto
+
+# Optional: Commit results
+git add . && git commit -m "Tested projectname"
+
+# Return to main branch
+git checkout main
+
+# Clean up branch if no longer needed
+git branch -D projectname
+```
+
+## Directory Structure
+
+```
+.
+├── crawler.php                      # URL crawler script
+├── create-backstop-scenarios.php    # Scenario generator
+├── manage-scenarios.php             # Workflow manager
+├── backstop.js                      # BackstopJS config
+├── crawled_urls.csv                 # Crawled URLs (generated)
+│
+├── scenarios/
+│   ├── pending/                     # Generated scenarios (waiting)
+│   ├── active/                      # Current scenario being tested
+│   └── done/                        # Completed scenarios (archived)
+│
+└── backstop_data/
+    ├── bitmaps_reference/           # Reference screenshots
+    ├── bitmaps_test/                # Test screenshots & diffs
+    ├── html_report/                 # Visual comparison reports
+    └── engine_scripts/              # Puppeteer/Playwright scripts
+```
+
+## Tips & Best Practices
+
+1. **Review Crawled URLs**: Always check `crawled_urls.csv` before generating scenarios. The crawler might miss some URLs or include unwanted ones.
+
+2. **Adjust for Your Site**: Each website is different. Tune `backstop.js` settings:
+   - Add cookie banners to `removeSelectors`
+   - Increase `delay` for AJAX-heavy pages
+   - Adjust `misMatchThreshold` based on acceptable variance
+
+3. **Use Auto Mode**: The `manage-scenarios.php auto` command provides the smoothest workflow for processing many scenarios.
+
+4. **Monitor Performance**: Process one scenario at a time to avoid memory issues and slow performance.
+
+5. **Archive Results**: Completed scenarios are timestamped and stored in `scenarios/done/` for future reference.
+
+6. **Alternative to Crawler**: You can use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the CSV file instead of using `crawler.php`.
+
+## Troubleshooting
+
+**No scenarios found in active directory:**
+```bash
+ddev exec php manage-scenarios.php next
+```
+
+**Need to restart from scratch:**
+```bash
+ddev exec php manage-scenarios.php reset
+```
+
+**Want to skip a problematic scenario:**
+```bash
+ddev exec php manage-scenarios.php skip
+```
+
+**Check current progress:**
+```bash
+ddev exec php manage-scenarios.php status
+```
+
+## Resources
+
+- [BackstopJS Documentation](https://github.com/garris/BackstopJS)
+- [DDEV Documentation](https://ddev.readthedocs.io/)
+- [Visual Regression Testing Guide](https://www.browserstack.com/guide/visual-regression-testing)
+
+## License
+
+This project is provided as-is for visual regression testing purposes.

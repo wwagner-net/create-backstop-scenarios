@@ -50,8 +50,9 @@ This is a BackstopJS scenario generator tool that automates visual regression te
 - `engine`: Uses Puppeteer with `--no-sandbox` flag
 
 **create-backstop-scenarios.php:**
-- `$testDomain`: The domain under test (e.g., DDEV local site)
-- `$referenceDomain`: The production/reference domain
+- `--test`: The domain under test (e.g., DDEV local site)
+- `--reference`: The production/reference domain
+- `--csv`: Optional path to CSV file (default: crawled_urls.csv)
 - URL chunking size: 40 URLs per file
 
 ## Common Commands
@@ -72,9 +73,19 @@ Creates `crawled_urls.csv` in the root directory.
 
 2. **Generate Scenario Files**
 ```bash
-ddev exec php create-backstop-scenarios.php
+ddev exec php create-backstop-scenarios.php \
+  --test=https://example.ddev.site \
+  --reference=https://www.example.com
 ```
 Creates multiple `scenarioUrls_N.js` files in `scenarios/pending/`.
+
+Optional: Specify a different CSV file:
+```bash
+ddev exec php create-backstop-scenarios.php \
+  --test=https://example.ddev.site \
+  --reference=https://www.example.com \
+  --csv=custom_urls.csv
+```
 
 3. **Activate First Scenario**
 ```bash
@@ -134,12 +145,13 @@ backstop openReport
 
 When testing a specific project:
 1. Create project branch: `git checkout -b projectname`
-2. Update domains in `create-backstop-scenarios.php`
-3. Adjust test parameters in `backstop.js` (removeSelectors, delay, etc.)
-4. Follow the three-phase workflow above
-5. Optionally commit results: `git add . && git commit -m "Tested projectname"`
-6. Return to main: `git checkout main`
-7. Clean up: `git branch -D projectname`
+2. Adjust test parameters in `backstop.js` (removeSelectors, delay, etc.)
+3. Run crawler with reference domain
+4. Generate scenarios with `--test` and `--reference` parameters
+5. Follow the scenario management workflow
+6. Optionally commit results: `git add . && git commit -m "Tested projectname"`
+7. Return to main: `git checkout main`
+8. Clean up: `git branch -D projectname`
 
 ## File Structure
 
