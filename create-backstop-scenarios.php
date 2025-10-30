@@ -3,13 +3,27 @@
 $csvFile = 'crawled_urls.csv';
 
 // Adjust test domain
-$testDomain = 'https://example.ddev.site';
+$testDomain = 'https://cobra.ddev.site';
 
 // Adjust reference domain
-$referenceDomain = 'https://www.example.com';
+$referenceDomain = 'https://www.cobra.de';
+
+// Output directory for scenario files
+$outputDir = 'scenarios/pending';
 
 // Array to save the URLs
 $urls = [];
+
+// Create directory structure if it doesn't exist
+if (!file_exists('scenarios/pending')) {
+    mkdir('scenarios/pending', 0755, true);
+}
+if (!file_exists('scenarios/active')) {
+    mkdir('scenarios/active', 0755, true);
+}
+if (!file_exists('scenarios/done')) {
+    mkdir('scenarios/done', 0755, true);
+}
 
 // Import CSV file
 if (($handle = fopen($csvFile, "r")) !== FALSE) {
@@ -24,7 +38,7 @@ $chunks = array_chunk($urls, 40);
 
 // Create JavaScript files
 foreach ($chunks as $index => $chunk) {
-    $filename = 'scenarioUrls_' . ($index + 1) . '.js';
+    $filename = $outputDir . '/scenarioUrls_' . ($index + 1) . '.js';
     $fileContent = "module.exports = {\n";
     $fileContent .= "    scenarioUrls: [\n";
 
@@ -44,5 +58,10 @@ foreach ($chunks as $index => $chunk) {
     file_put_contents($filename, $fileContent);
 }
 
-echo "JavaScript files have been successfully created.\n";
+echo "JavaScript files have been successfully created in scenarios/pending/.\n";
+echo "Total files created: " . count($chunks) . "\n";
+echo "\nNext steps:\n";
+echo "  1. Run: ddev exec php manage-scenarios.php next\n";
+echo "  2. Run: backstop reference --config ./backstop.js\n";
+echo "  3. Run: backstop test --config ./backstop.js\n";
 

@@ -7,12 +7,20 @@
 const fs = require('fs');
 const path = require('path');
 
-// Path to the directory in which the scenarioUrls files are stored
-const scenariosDir = path.resolve(__dirname);
+// Path to the directory in which the active scenario files are stored
+const scenariosDir = path.resolve(__dirname, 'scenarios', 'active');
 
 // Function to load all files that match the name pattern
 function loadScenarioUrls() {
     const scenarioUrls = [];
+
+    // Check if active directory exists
+    if (!fs.existsSync(scenariosDir)) {
+        console.warn('Warning: scenarios/active/ directory does not exist or is empty.');
+        console.warn('Run: ddev exec php manage-scenarios.php next');
+        return scenarioUrls;
+    }
+
     const files = fs.readdirSync(scenariosDir);
 
     files.forEach(file => {
@@ -21,6 +29,11 @@ function loadScenarioUrls() {
             scenarioUrls.push(...scenarioModule);
         }
     });
+
+    if (scenarioUrls.length === 0) {
+        console.warn('Warning: No scenario files found in scenarios/active/');
+        console.warn('Run: ddev exec php manage-scenarios.php next');
+    }
 
     return scenarioUrls;
 }
