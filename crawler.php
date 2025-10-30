@@ -11,8 +11,9 @@ define('MAX_URLS', 10000);
  * Crawl a domain and extract all page URLs
  */
 function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = false, $csvHandle = null) {
+    // Use associative arrays (hash tables) for O(1) lookup instead of O(n)
     $visited = [];
-    $toVisit = [$domain];
+    $toVisit = [$domain => true];
     $urlCount = 0;
     $totalVisited = 0;
     $errorLog = [];
@@ -29,15 +30,18 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
     }
     echo "\n";
 
-    while ($toVisit && $totalVisited < $maxUrls) {
-        $currentUrl = array_pop($toVisit);
+    while (!empty($toVisit) && $totalVisited < $maxUrls) {
+        // Get next URL from queue (get first key)
+        reset($toVisit);
+        $currentUrl = key($toVisit);
+        unset($toVisit[$currentUrl]);
 
         // Skip if already visited
-        if (in_array($currentUrl, $visited)) {
+        if (isset($visited[$currentUrl])) {
             continue;
         }
 
-        $visited[] = $currentUrl;
+        $visited[$currentUrl] = true;
 
         // Fetch page content
         $result = fetchUrl($currentUrl);
@@ -83,8 +87,8 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
                 continue;
             }
 
-            // Check if URL is new (avoid duplicates)
-            if (!in_array($normalizedUrl, $visited) && !in_array($normalizedUrl, $toVisit)) {
+            // Check if URL is new (avoid duplicates) - O(1) lookup with isset
+            if (!isset($visited[$normalizedUrl]) && !isset($toVisit[$normalizedUrl])) {
                 // Write to CSV immediately if handle is provided
                 if ($csvHandle !== null) {
                     fputcsv($csvHandle, [$normalizedUrl]);
@@ -94,7 +98,7 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
                 $urlCount++;
 
                 // Add to crawl queue
-                $toVisit[] = $normalizedUrl;
+                $toVisit[$normalizedUrl] = true;
             }
         }
 
