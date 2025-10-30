@@ -71,6 +71,12 @@ ddev exec php crawler.php --url https://referencedomain.com
 ```
 Creates `crawled_urls.csv` in the root directory.
 
+**Crawler options:**
+- `--max-urls=N`: Limit number of URLs (default: 10000)
+- `--output=FILE`: Custom output file
+- `--include-params`: Include URLs with query parameters
+- `--help`: Show help
+
 2. **Generate Scenario Files**
 ```bash
 ddev exec php create-backstop-scenarios.php \
@@ -79,7 +85,7 @@ ddev exec php create-backstop-scenarios.php \
 ```
 Creates multiple `scenarioUrls_N.js` files in `scenarios/pending/`.
 
-Optional: Specify a different CSV file:
+**Optional: Use custom CSV file**
 ```bash
 ddev exec php create-backstop-scenarios.php \
   --test=https://example.ddev.site \

@@ -34,6 +34,21 @@ ddev exec php crawler.php --url https://www.example.com
 ```
 This creates `crawled_urls.csv` with all discovered URLs.
 
+**Optional parameters:**
+```bash
+# Limit number of URLs
+ddev exec php crawler.php --url https://www.example.com --max-urls=500
+
+# Custom output file
+ddev exec php crawler.php --url https://www.example.com --output=custom.csv
+
+# Include URLs with query parameters
+ddev exec php crawler.php --url https://www.example.com --include-params
+
+# Show help
+ddev exec php crawler.php --help
+```
+
 ### 3. Generate Test Scenarios
 ```bash
 ddev exec php create-backstop-scenarios.php \
@@ -74,17 +89,37 @@ This guides you through all scenarios interactively.
 Crawls a website and extracts all page URLs.
 
 **Features:**
-- Recursive crawling
+- Recursive crawling with proper error handling
+- User-Agent header to avoid bot blocking
+- Smart URL resolution (handles relative paths, ../, ./)
 - Filters out files (PDF, images, etc.)
-- Excludes URLs with parameters or anchors
-- Removes tel:, mailto:, and javascript: links
+- Excludes URLs with parameters (optional)
+- Removes fragments and trailing slashes
+- Timeout and connection validation
+- Real-time progress display with error tracking
 
 **Usage:**
 ```bash
+# Basic usage
 ddev exec php crawler.php --url https://www.example.com
+
+# With options
+ddev exec php crawler.php \
+  --url https://www.example.com \
+  --output=urls.csv \
+  --max-urls=1000 \
+  --include-params
 ```
 
-**Output:** `crawled_urls.csv`
+**Options:**
+- `--url` (required): Domain to crawl
+- `--output`: Custom output file (default: crawled_urls.csv)
+- `--max-urls`: Maximum URLs to crawl (default: 10000)
+- `--max-depth`: Maximum crawl depth (not yet implemented)
+- `--include-params`: Include URLs with query parameters
+- `--help`: Show help message
+
+**Output:** CSV file with one URL per line
 
 ### 2. create-backstop-scenarios.php
 Generates BackstopJS scenario files from the CSV.
