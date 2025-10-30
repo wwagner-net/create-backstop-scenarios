@@ -73,9 +73,16 @@ Creates `crawled_urls.csv` in the root directory.
 
 **Crawler options:**
 - `--max-urls=N`: Limit number of URLs (default: 10000)
-- `--output=FILE`: Custom output file
+- `--output=FILE`: Custom output file (default: crawled_urls.csv)
 - `--include-params`: Include URLs with query parameters
+- `--verbose`: Show detailed error messages during crawling
 - `--help`: Show help
+
+**Important crawler features:**
+- Streams URLs directly to CSV (no memory issues with large sites)
+- Smart URL filtering (tel:, mailto:, javascript:, etc.)
+- Detailed error reporting with categorization
+- Real-time progress display
 
 2. **Generate Scenario Files**
 ```bash
@@ -175,7 +182,9 @@ When testing a specific project:
 - Only one scenario file is active at a time, preventing memory issues with large test sets
 - The `backstop.js` configuration only loads files from `scenarios/active/`
 - Completed scenarios are archived with timestamps in `scenarios/done/`
-- Manual CSV review is recommended after crawling, as the crawler may miss some URLs
-- The crawler filters out file extensions, but edge cases may require manual CSV cleanup
+- **Crawler writes URLs in real-time** - safe to interrupt, no data loss
+- Crawler automatically filters invalid URLs (tel:, mailto:, javascript:, malformed URLs)
+- Error summary shows categorized failures (404, 403, 500, etc.) with examples
+- Manual CSV review recommended - check for missed or unwanted URLs
 - Test and reference domains are swapped during scenario generation for side-by-side comparison
 - Use `manage-scenarios.php auto` for a streamlined interactive workflow

@@ -45,6 +45,9 @@ ddev exec php crawler.php --url https://www.example.com --output=custom.csv
 # Include URLs with query parameters
 ddev exec php crawler.php --url https://www.example.com --include-params
 
+# Show detailed error messages
+ddev exec php crawler.php --url https://www.example.com --verbose
+
 # Show help
 ddev exec php crawler.php --help
 ```
@@ -93,10 +96,14 @@ Crawls a website and extracts all page URLs.
 - User-Agent header to avoid bot blocking
 - Smart URL resolution (handles relative paths, ../, ./)
 - Filters out files (PDF, images, etc.)
+- Advanced URL filtering (tel:, mailto:, javascript:, malformed URLs)
 - Excludes URLs with parameters (optional)
 - Removes fragments and trailing slashes
 - Timeout and connection validation
 - Real-time progress display with error tracking
+- **Streaming CSV writing** - writes URLs immediately (no memory issues)
+- Detailed error summary with categorization (404, 403, 500, etc.)
+- Safe to interrupt - no data loss
 
 **Usage:**
 ```bash
@@ -117,9 +124,29 @@ ddev exec php crawler.php \
 - `--max-urls`: Maximum URLs to crawl (default: 10000)
 - `--max-depth`: Maximum crawl depth (not yet implemented)
 - `--include-params`: Include URLs with query parameters
+- `--verbose`: Show detailed error messages during crawling
 - `--help`: Show help message
 
-**Output:** CSV file with one URL per line
+**Output:** CSV file with one URL per line (written in real-time)
+
+**Error Handling:**
+After crawling, you'll see a detailed error summary:
+```
+--- Error Summary ---
+
+Page not found (404): 8 page(s)
+  - https://example.com/old-page
+  ... and 5 more
+
+Error rate: 5.7% (6 errors out of 106 pages)
+ℹ️  Small number of errors - this is normal for most websites.
+```
+
+Common error types:
+- **404 (Page not found)**: Broken links or deleted pages - usually harmless
+- **403 (Access forbidden)**: Protected pages (admin, private areas)
+- **500 (Server error)**: Server-side issues - might need investigation
+- **Connection failed**: Timeout or unreachable pages
 
 ### 2. create-backstop-scenarios.php
 Generates BackstopJS scenario files from the CSV.
@@ -262,20 +289,27 @@ git branch -D projectname
 
 ## Tips & Best Practices
 
-1. **Review Crawled URLs**: Always check `crawled_urls.csv` before generating scenarios. The crawler might miss some URLs or include unwanted ones.
+1. **Review Crawled URLs**: Always check `crawled_urls.csv` before generating scenarios. The crawler automatically filters invalid URLs, but manual review is still recommended.
 
-2. **Adjust for Your Site**: Each website is different. Tune `backstop.js` settings:
+2. **Crawler is Safe to Interrupt**: URLs are written in real-time. If you need to stop crawling (Ctrl+C), all discovered URLs are already saved.
+
+3. **Understanding Errors**: Check the error summary after crawling:
+   - < 10% error rate: Normal, usually harmless broken links
+   - 10-25% error rate: Moderate, some broken links to fix
+   - > 25% error rate: High, possible connectivity or server issues
+
+4. **Adjust for Your Site**: Each website is different. Tune `backstop.js` settings:
    - Add cookie banners to `removeSelectors`
    - Increase `delay` for AJAX-heavy pages
    - Adjust `misMatchThreshold` based on acceptable variance
 
-3. **Use Auto Mode**: The `manage-scenarios.php auto` command provides the smoothest workflow for processing many scenarios.
+5. **Use Auto Mode**: The `manage-scenarios.php auto` command provides the smoothest workflow for processing many scenarios.
 
-4. **Monitor Performance**: Process one scenario at a time to avoid memory issues and slow performance.
+6. **Monitor Performance**: Process one scenario at a time (40 URLs) to avoid memory issues and slow performance.
 
-5. **Archive Results**: Completed scenarios are timestamped and stored in `scenarios/done/` for future reference.
+7. **Archive Results**: Completed scenarios are timestamped and stored in `scenarios/done/` for future reference.
 
-6. **Alternative to Crawler**: You can use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the CSV file instead of using `crawler.php`.
+8. **Alternative to Crawler**: You can use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the CSV file instead of using `crawler.php`.
 
 ## Troubleshooting
 

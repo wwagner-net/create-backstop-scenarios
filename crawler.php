@@ -10,10 +10,10 @@ define('MAX_URLS', 10000);
 /**
  * Crawl a domain and extract all page URLs
  */
-function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = false) {
+function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = false, $csvHandle = null) {
     $visited = [];
     $toVisit = [$domain];
-    $urls = [];
+    $urlCount = 0;
     $totalVisited = 0;
     $errorLog = [];
 
@@ -22,7 +22,12 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
     if ($maxDepth !== null) {
         echo "Max depth: $maxDepth\n";
     }
-    echo "Max URLs: $maxUrls\n\n";
+    echo "Max URLs: $maxUrls\n";
+
+    if ($csvHandle !== null) {
+        echo "Writing URLs to CSV in real-time...\n";
+    }
+    echo "\n";
 
     while ($toVisit && $totalVisited < $maxUrls) {
         $currentUrl = array_pop($toVisit);
@@ -78,25 +83,29 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
                 continue;
             }
 
-            // Add to URLs list (with fragment removed)
-            if (!in_array($normalizedUrl, $urls)) {
-                $urls[] = $normalizedUrl;
-            }
-
-            // Add to crawl queue
+            // Check if URL is new (avoid duplicates)
             if (!in_array($normalizedUrl, $visited) && !in_array($normalizedUrl, $toVisit)) {
+                // Write to CSV immediately if handle is provided
+                if ($csvHandle !== null) {
+                    fputcsv($csvHandle, [$normalizedUrl]);
+                    fflush($csvHandle); // Force write to disk
+                }
+
+                $urlCount++;
+
+                // Add to crawl queue
                 $toVisit[] = $normalizedUrl;
             }
         }
 
         $totalVisited++;
-        echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", URLs found: " . count($urls) . ", Errors: " . count($errorLog) . "    ";
+        echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", URLs found: $urlCount, Errors: " . count($errorLog) . "    ";
     }
 
     echo "\n\n";
     echo "Crawling complete!\n";
     echo "Total pages visited: $totalVisited\n";
-    echo "Total URLs found: " . count($urls) . "\n";
+    echo "Total URLs found: $urlCount\n";
     echo "Errors encountered: " . count($errorLog) . "\n";
 
     // Show error summary
@@ -106,11 +115,11 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
 
     echo "\n";
 
-    // Remove duplicates and sort
-    $urls = array_unique($urls);
-    sort($urls);
-
-    return $urls;
+    return [
+        'urlCount' => $urlCount,
+        'visited' => $totalVisited,
+        'errors' => $errorLog
+    ];
 }
 
 /**
@@ -566,42 +575,67 @@ if ($testResult['success'] === false) {
 }
 echo "Connection successful!\n\n";
 
-// Crawl URLs
-$urls = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose);
-
-// Filter out URLs with parameters if needed
-if (!$includeParams) {
-    $originalCount = count($urls);
-    $urls = array_filter($urls, function($url) {
-        return strpos($url, '?') === false;
-    });
-    $filteredCount = $originalCount - count($urls);
-    if ($filteredCount > 0) {
-        echo "Filtered out $filteredCount URLs with query parameters.\n";
-        echo "Use --include-params to keep them.\n\n";
-    }
+// Open CSV file for writing BEFORE crawling
+$csvHandle = fopen($outputFile, 'w');
+if ($csvHandle === false) {
+    echo "Error: Could not create file: $outputFile\n";
+    exit(1);
 }
 
-if (empty($urls)) {
+echo "Writing URLs to: $outputFile\n\n";
+
+// Crawl URLs and write to CSV in real-time
+$result = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose, $csvHandle);
+
+// Close CSV file
+fclose($csvHandle);
+
+if ($result['urlCount'] === 0) {
     echo "Warning: No URLs found!\n";
+    unlink($outputFile); // Delete empty file
     exit(1);
 }
 
-// Write CSV file
-echo "Writing to file: $outputFile\n";
-if (($handle = fopen($outputFile, 'w')) !== false) {
-    foreach ($urls as $url) {
-        fputcsv($handle, [$url]);
+// Post-process: Filter out URLs with parameters if needed
+if (!$includeParams) {
+    echo "Post-processing: Filtering URLs with query parameters...\n";
+
+    $tempFile = $outputFile . '.tmp';
+    $readHandle = fopen($outputFile, 'r');
+    $writeHandle = fopen($tempFile, 'w');
+
+    $originalCount = 0;
+    $filteredCount = 0;
+
+    while (($data = fgetcsv($readHandle)) !== false) {
+        $originalCount++;
+        $url = $data[0];
+
+        if (strpos($url, '?') === false) {
+            fputcsv($writeHandle, [$url]);
+            $filteredCount++;
+        }
     }
-    fclose($handle);
-    echo "✓ CSV file successfully created: $outputFile\n";
-    echo "✓ Total URLs exported: " . count($urls) . "\n\n";
-    echo "Next steps:\n";
-    echo "  1. Review the CSV file: $outputFile\n";
-    echo "  2. Run: ddev exec php create-backstop-scenarios.php \\\n";
-    echo "       --test=https://your-test-domain.com \\\n";
-    echo "       --reference=$referenceDomain\n";
-} else {
-    echo "Error: Could not write to file: $outputFile\n";
-    exit(1);
+
+    fclose($readHandle);
+    fclose($writeHandle);
+
+    // Replace original file with filtered file
+    rename($tempFile, $outputFile);
+
+    $removedCount = $originalCount - $filteredCount;
+    if ($removedCount > 0) {
+        echo "✓ Filtered out $removedCount URLs with query parameters.\n";
+        echo "  Use --include-params to keep them.\n\n";
+    }
+
+    $result['urlCount'] = $filteredCount;
 }
+
+echo "✓ CSV file successfully created: $outputFile\n";
+echo "✓ Total URLs exported: " . $result['urlCount'] . "\n\n";
+echo "Next steps:\n";
+echo "  1. Review the CSV file: $outputFile\n";
+echo "  2. Run: ddev exec php create-backstop-scenarios.php \\\n";
+echo "       --test=https://your-test-domain.com \\\n";
+echo "       --reference=$referenceDomain\n";
