@@ -10,12 +10,12 @@ define('MAX_URLS', 10000);
 /**
  * Crawl a domain and extract all page URLs
  */
-function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS) {
+function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = false) {
     $visited = [];
     $toVisit = [$domain];
     $urls = [];
     $totalVisited = 0;
-    $errors = 0;
+    $errorLog = [];
 
     echo "Starting crawler...\n";
     echo "Domain: $domain\n";
@@ -35,12 +35,22 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS) {
         $visited[] = $currentUrl;
 
         // Fetch page content
-        $html = fetchUrl($currentUrl);
-        if ($html === false) {
-            $errors++;
-            echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", Errors: $errors    ";
+        $result = fetchUrl($currentUrl);
+        if ($result['success'] === false) {
+            $errorLog[] = [
+                'url' => $currentUrl,
+                'reason' => $result['error']
+            ];
+
+            if ($verbose) {
+                echo "\n[ERROR] " . $result['error'] . ": $currentUrl\n";
+            }
+
+            echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", Errors: " . count($errorLog) . "    ";
             continue;
         }
+
+        $html = $result['content'];
 
         // Extract all links from the page
         $extractedUrls = extractLinks($html, $currentUrl, $domain);
@@ -80,20 +90,77 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS) {
         }
 
         $totalVisited++;
-        echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", URLs found: " . count($urls) . ", Errors: $errors    ";
+        echo "\rPages visited: $totalVisited, Pending: " . count($toVisit) . ", URLs found: " . count($urls) . ", Errors: " . count($errorLog) . "    ";
     }
 
     echo "\n\n";
     echo "Crawling complete!\n";
     echo "Total pages visited: $totalVisited\n";
     echo "Total URLs found: " . count($urls) . "\n";
-    echo "Errors encountered: $errors\n\n";
+    echo "Errors encountered: " . count($errorLog) . "\n";
+
+    // Show error summary
+    if (!empty($errorLog)) {
+        showErrorSummary($errorLog, $totalVisited);
+    }
+
+    echo "\n";
 
     // Remove duplicates and sort
     $urls = array_unique($urls);
     sort($urls);
 
     return $urls;
+}
+
+/**
+ * Show error summary with categorized errors
+ */
+function showErrorSummary($errorLog, $totalVisited) {
+    $errorTypes = [];
+
+    // Categorize errors
+    foreach ($errorLog as $error) {
+        $reason = $error['reason'];
+        if (!isset($errorTypes[$reason])) {
+            $errorTypes[$reason] = [];
+        }
+        $errorTypes[$reason][] = $error['url'];
+    }
+
+    echo "\n--- Error Summary ---\n";
+
+    foreach ($errorTypes as $reason => $urls) {
+        $count = count($urls);
+        echo "\n$reason: $count page(s)\n";
+
+        // Show first 3 examples
+        $examples = array_slice($urls, 0, 3);
+        foreach ($examples as $url) {
+            echo "  - $url\n";
+        }
+
+        if ($count > 3) {
+            echo "  ... and " . ($count - 3) . " more\n";
+        }
+    }
+
+    echo "\n";
+    $totalErrors = count($errorLog);
+    $totalAttempts = $totalVisited + $totalErrors;
+    $errorRate = $totalAttempts > 0 ? round(($totalErrors / $totalAttempts) * 100, 1) : 0;
+
+    echo "Error rate: $errorRate% ($totalErrors errors out of $totalAttempts pages)\n";
+
+    if ($totalErrors < 5) {
+        echo "ℹ️  These errors are normal and can usually be ignored.\n";
+    } elseif ($errorRate < 10) {
+        echo "ℹ️  Small number of errors - this is normal for most websites.\n";
+    } elseif ($errorRate < 25) {
+        echo "⚠️  Moderate number of errors - the site might have some broken links.\n";
+    } else {
+        echo "⚠️  High error rate - there might be connectivity issues or many broken links.\n";
+    }
 }
 
 /**
@@ -120,7 +187,11 @@ function fetchUrl($url) {
     $html = @file_get_contents($url, false, $context);
 
     if ($html === false) {
-        return false;
+        return [
+            'success' => false,
+            'error' => 'Connection failed',
+            'content' => null
+        ];
     }
 
     // Check HTTP response code
@@ -129,11 +200,32 @@ function fetchUrl($url) {
         $statusCode = isset($matches[1]) ? (int)$matches[1] : 0;
 
         if ($statusCode >= 400) {
-            return false;
+            $errorMessage = 'HTTP ' . $statusCode;
+            if ($statusCode == 404) {
+                $errorMessage = 'Page not found (404)';
+            } elseif ($statusCode == 403) {
+                $errorMessage = 'Access forbidden (403)';
+            } elseif ($statusCode == 500) {
+                $errorMessage = 'Server error (500)';
+            } elseif ($statusCode >= 400 && $statusCode < 500) {
+                $errorMessage = 'Client error (' . $statusCode . ')';
+            } elseif ($statusCode >= 500) {
+                $errorMessage = 'Server error (' . $statusCode . ')';
+            }
+
+            return [
+                'success' => false,
+                'error' => $errorMessage,
+                'content' => null
+            ];
         }
     }
 
-    return $html;
+    return [
+        'success' => true,
+        'error' => null,
+        'content' => $html
+    ];
 }
 
 /**
@@ -378,6 +470,7 @@ function getArguments() {
         "max-depth::",
         "max-urls::",
         "include-params",
+        "verbose",
         "help"
     ];
 
@@ -412,12 +505,13 @@ function showHelp() {
     echo "  --max-depth=N           Maximum crawl depth (default: unlimited)\n";
     echo "  --max-urls=N            Maximum URLs to crawl (default: 10000)\n";
     echo "  --include-params        Include URLs with query parameters\n";
+    echo "  --verbose               Show detailed error messages during crawling\n";
     echo "  --help                  Show this help message\n\n";
     echo "Examples:\n";
     echo "  ddev exec php crawler.php --url=https://www.example.com\n";
     echo "  ddev exec php crawler.php --url=https://www.example.com --output=urls.csv\n";
     echo "  ddev exec php crawler.php --url=https://www.example.com --max-urls=500\n";
-    echo "  ddev exec php crawler.php --url=https://www.example.com --include-params\n\n";
+    echo "  ddev exec php crawler.php --url=https://www.example.com --verbose\n\n";
 }
 
 /**
@@ -456,12 +550,14 @@ $outputFile = $options['output'] ?? 'crawled_urls.csv';
 $maxDepth = isset($options['max-depth']) ? (int)$options['max-depth'] : null;
 $maxUrls = isset($options['max-urls']) ? (int)$options['max-urls'] : MAX_URLS;
 $includeParams = isset($options['include-params']);
+$verbose = isset($options['verbose']);
 
 // Test if domain is reachable
 echo "Testing connection to $referenceDomain...\n";
-$testHtml = fetchUrl($referenceDomain);
-if ($testHtml === false) {
+$testResult = fetchUrl($referenceDomain);
+if ($testResult['success'] === false) {
     echo "Error: Could not connect to $referenceDomain\n";
+    echo "Reason: " . $testResult['error'] . "\n\n";
     echo "Please check:\n";
     echo "  - Is the URL correct?\n";
     echo "  - Is the website online?\n";
@@ -471,7 +567,7 @@ if ($testHtml === false) {
 echo "Connection successful!\n\n";
 
 // Crawl URLs
-$urls = getUrls($referenceDomain, $maxDepth, $maxUrls);
+$urls = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose);
 
 // Filter out URLs with parameters if needed
 if (!$includeParams) {
