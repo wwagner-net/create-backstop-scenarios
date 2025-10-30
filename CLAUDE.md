@@ -2,6 +2,53 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Current Version:** 1.0.0
+
+## Version Management
+
+This project uses [Semantic Versioning](https://semver.org/):
+- **MAJOR** (1.x.x): Incompatible API changes or major rewrites
+- **MINOR** (x.1.x): New features, backward-compatible
+- **PATCH** (x.x.1): Bug fixes, backward-compatible
+
+### When Making Changes
+
+**ALWAYS update CHANGELOG.md** following [Keep a Changelog](https://keepachangelog.com/) format:
+
+1. **For new features** (bump MINOR version):
+   - Add to `### Added` section under `## [Unreleased]`
+   - Example: "Added --timeout parameter to crawler.php"
+
+2. **For bug fixes** (bump PATCH version):
+   - Add to `### Fixed` section under `## [Unreleased]`
+   - Example: "Fixed memory leak in URL duplicate checking"
+
+3. **For breaking changes** (bump MAJOR version):
+   - Add to `### Changed` section under `## [Unreleased]`
+   - Mark as **[BREAKING]**
+   - Example: "[BREAKING] Changed command-line parameter format"
+
+4. **For deprecations**:
+   - Add to `### Deprecated` section
+   - Example: "Deprecated --max-depth parameter (to be removed in v2.0.0)"
+
+5. **For removals**:
+   - Add to `### Removed` section
+   - Example: "Removed deprecated --legacy-mode flag"
+
+6. **For security fixes**:
+   - Add to `### Security` section
+   - Example: "Fixed XSS vulnerability in error output"
+
+### Release Process
+
+When ready to release:
+1. Move `## [Unreleased]` entries to new version section with date
+2. Update version number in README.md header
+3. Update "Current Version" in this file
+4. Create git tag: `git tag -a v1.1.0 -m "Release v1.1.0"`
+5. Push tag: `git push origin v1.1.0`
+
 ## Project Overview
 
 This is a BackstopJS scenario generator tool that automates visual regression testing by crawling websites and generating test scenarios. It consists of PHP scripts for URL collection and scenario generation, plus a Node.js-based BackstopJS configuration.

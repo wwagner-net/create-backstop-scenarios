@@ -1,5 +1,7 @@
 # BackstopJS Scenario Generator
 
+**Version 1.0.0**
+
 Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
 
 ## Features
@@ -339,6 +341,26 @@ ddev exec php manage-scenarios.php status
 - [DDEV Documentation](https://ddev.readthedocs.io/)
 - [Visual Regression Testing Guide](https://www.browserstack.com/guide/visual-regression-testing)
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and version updates.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+When contributing, please:
+1. Update CHANGELOG.md following [Keep a Changelog](https://keepachangelog.com/) format
+2. Follow [Semantic Versioning](https://semver.org/) for version numbers
+3. Test your changes thoroughly
+4. Update documentation as needed
+
+## Author
+
+**Wolfgang Wagner**
+
 ## License
 
-This project is provided as-is for visual regression testing purposes.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2025 Wolfgang Wagner
