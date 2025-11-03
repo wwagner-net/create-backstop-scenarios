@@ -40,3 +40,6 @@ Temporary Items
 
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm,macos
 backstop_data/
+crawled_urls.txt
+crawled_urls.csv
+scenarios/
