@@ -37,7 +37,7 @@ backstop init
 ```bash
 ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml
 ```
-This parses the sitemap.xml and creates `crawled_urls.csv` with all URLs.
+This parses the sitemap.xml and creates `crawled_urls.txt` with all URLs.
 
 **Advantages:**
 - Much faster (seconds instead of minutes)
@@ -48,7 +48,7 @@ This parses the sitemap.xml and creates `crawled_urls.csv` with all URLs.
 ```bash
 ddev exec php crawler.php --url https://www.example.com
 ```
-This crawls the website recursively and creates `crawled_urls.csv` with all discovered URLs.
+This crawls the website recursively and creates `crawled_urls.txt` with all discovered URLs.
 
 **Optional parameters (both modes):**
 ```bash
@@ -56,7 +56,7 @@ This crawls the website recursively and creates `crawled_urls.csv` with all disc
 ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --max-urls=500
 
 # Custom output file
-ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --output=custom.csv
+ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --output=custom.txt
 
 # Include URLs with query parameters
 ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --include-params
@@ -115,7 +115,7 @@ Parses sitemap.xml files - much faster than crawling!
 **Features:**
 - Parses regular sitemaps and sitemap index files
 - Automatically follows and processes all sub-sitemaps
-- Real-time CSV streaming (no memory issues)
+- Real-time file streaming (no memory issues)
 - Applies same filtering as crawler mode
 - Ideal for large websites with comprehensive sitemaps
 
@@ -127,7 +127,7 @@ ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml
 # With options
 ddev exec php crawler.php \
   --sitemap https://www.example.com/sitemap.xml \
-  --output=urls.csv \
+  --output=urls.txt \
   --max-urls=1000 \
   --include-params
 ```
@@ -145,7 +145,7 @@ Recursively crawls websites and extracts URLs.
 - Removes fragments and trailing slashes
 - Timeout and connection validation
 - Real-time progress display with error tracking
-- **Streaming CSV writing** - writes URLs immediately (no memory issues)
+- **Streaming file writing** - writes URLs immediately (no memory issues)
 - Detailed error summary with categorization (404, 403, 500, etc.)
 - Safe to interrupt - no data loss
 
@@ -157,7 +157,7 @@ ddev exec php crawler.php --url https://www.example.com
 # With options
 ddev exec php crawler.php \
   --url https://www.example.com \
-  --output=urls.csv \
+  --output=urls.txt \
   --max-urls=1000 \
   --include-params \
   --verbose
@@ -165,14 +165,14 @@ ddev exec php crawler.php \
 
 **Options:**
 - `--url` or `--sitemap` (required, choose one): URL to crawl or sitemap to parse
-- `--output`: Custom output file (default: crawled_urls.csv)
+- `--output`: Custom output file (default: crawled_urls.txt)
 - `--max-urls`: Maximum URLs to process (default: 10000)
 - `--max-depth`: Maximum crawl depth (crawler only, not yet implemented)
 - `--include-params`: Include URLs with query parameters
 - `--verbose`: Show detailed error messages (crawler mode only)
 - `--help`: Show help message
 
-**Output:** CSV file with one URL per line (written in real-time)
+**Output:** Text file with one URL per line (written in real-time)
 
 **Error Handling:**
 After crawling, you'll see a detailed error summary:
@@ -194,7 +194,7 @@ Common error types:
 - **Connection failed**: Timeout or unreachable pages
 
 ### 2. create-backstop-scenarios.php
-Generates BackstopJS scenario files from the CSV.
+Generates BackstopJS scenario files from the URLs file.
 
 **Features:**
 - Splits URLs into batches of 40
@@ -207,13 +207,13 @@ Generates BackstopJS scenario files from the CSV.
 ddev exec php create-backstop-scenarios.php \
   --test=https://example.ddev.site \
   --reference=https://www.example.com \
-  [--csv=custom_urls.csv]
+  [--urls=custom_urls.txt]
 ```
 
 **Options:**
 - `--test` (required): Your test domain
 - `--reference` (required): The reference/production domain
-- `--csv` (optional): Path to CSV file (default: crawled_urls.csv)
+- `--urls` (optional): Path to URLs file (default: crawled_urls.txt)
 - `--help`: Show help message
 
 **Output:** Scenario files in `scenarios/pending/`
@@ -318,7 +318,7 @@ git branch -D projectname
 ├── create-backstop-scenarios.php    # Scenario generator
 ├── manage-scenarios.php             # Workflow manager
 ├── backstop.js                      # BackstopJS config
-├── crawled_urls.csv                 # Crawled URLs (generated)
+├── crawled_urls.txt                 # Crawled URLs (generated)
 │
 ├── scenarios/
 │   ├── pending/                     # Generated scenarios (waiting)
@@ -334,7 +334,7 @@ git branch -D projectname
 
 ## Tips & Best Practices
 
-1. **Review Crawled URLs**: Always check `crawled_urls.csv` before generating scenarios. The crawler automatically filters invalid URLs, but manual review is still recommended.
+1. **Review Crawled URLs**: Always check `crawled_urls.txt` before generating scenarios. The crawler automatically filters invalid URLs, but manual review is still recommended.
 
 2. **Crawler is Safe to Interrupt**: URLs are written in real-time. If you need to stop crawling (Ctrl+C), all discovered URLs are already saved.
 
@@ -356,7 +356,7 @@ git branch -D projectname
 
 8. **Prefer Sitemap Parsing**: If the website has a sitemap.xml, use `--sitemap` instead of `--url` for much faster URL collection. Most modern websites have sitemaps at `/sitemap.xml` or linked from `/robots.txt`.
 
-9. **Alternative Tools**: You can also use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the CSV file instead of using `crawler.php`.
+9. **Alternative Tools**: You can also use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the URLs file instead of using `crawler.php`.
 
 ## Troubleshooting
 

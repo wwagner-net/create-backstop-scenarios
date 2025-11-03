@@ -10,7 +10,7 @@ function getArguments() {
     $longopts = array(
         "test:",        // Test domain (optional)
         "reference:",   // Reference domain (optional)
-        "csv:",         // CSV file path (optional)
+        "urls:",        // URLs file path (optional)
     );
     $options = getopt($shortopts, $longopts);
 
@@ -30,7 +30,7 @@ function showHelp() {
     echo "BackstopJS Scenario Generator\n\n";
     echo "Usage: ddev exec php create-backstop-scenarios.php [options]\n\n";
     echo "Options:\n";
-    echo "  --csv=FILE              Path to CSV file with URLs (default: crawled_urls.csv)\n";
+    echo "  --urls=FILE             Path to file with URLs (default: crawled_urls.txt)\n";
     echo "  --test=URL              Test domain URL (required)\n";
     echo "  --reference=URL         Reference domain URL (required)\n";
     echo "  --help                  Show this help message\n\n";
@@ -43,8 +43,8 @@ function showHelp() {
 // Parse arguments
 $options = getArguments();
 
-// Path to the CSV file
-$csvFile = $options['csv'] ?? 'crawled_urls.csv';
+// Path to the URLs file
+$urlsFile = $options['urls'] ?? 'crawled_urls.txt';
 
 // Get domains from arguments
 if (!isset($options['test']) || !isset($options['reference'])) {
@@ -74,7 +74,7 @@ $outputDir = 'scenarios/pending';
 $urls = [];
 
 echo "Configuration:\n";
-echo "  CSV File:         $csvFile\n";
+echo "  URLs File:        $urlsFile\n";
 echo "  Test Domain:      $testDomain\n";
 echo "  Reference Domain: $referenceDomain\n";
 echo "  Output Directory: $outputDir\n\n";
@@ -90,24 +90,19 @@ if (!file_exists('scenarios/done')) {
     mkdir('scenarios/done', 0755, true);
 }
 
-// Check if CSV file exists
-if (!file_exists($csvFile)) {
-    echo "Error: CSV file not found: $csvFile\n";
+// Check if URLs file exists
+if (!file_exists($urlsFile)) {
+    echo "Error: URLs file not found: $urlsFile\n";
     echo "Please run the crawler first:\n";
     echo "  ddev exec php crawler.php --url $referenceDomain\n";
     exit(1);
 }
 
-// Import CSV file
-if (($handle = fopen($csvFile, "r")) !== FALSE) {
-    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-        $urls[] = $data[0];
-    }
-    fclose($handle);
-}
+// Import URLs file
+$urls = file($urlsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
 if (empty($urls)) {
-    echo "Error: No URLs found in CSV file: $csvFile\n";
+    echo "Error: No URLs found in file: $urlsFile\n";
     exit(1);
 }
 

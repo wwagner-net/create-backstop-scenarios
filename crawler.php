@@ -26,7 +26,7 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
     echo "Max URLs: $maxUrls\n";
 
     if ($csvHandle !== null) {
-        echo "Writing URLs to CSV in real-time...\n";
+        echo "Writing URLs to file in real-time...\n";
     }
     echo "\n";
 
@@ -89,9 +89,9 @@ function getUrls($domain, $maxDepth = null, $maxUrls = MAX_URLS, $verbose = fals
 
             // Check if URL is new (avoid duplicates) - O(1) lookup with isset
             if (!isset($visited[$normalizedUrl]) && !isset($toVisit[$normalizedUrl])) {
-                // Write to CSV immediately if handle is provided
+                // Write to file immediately if handle is provided
                 if ($csvHandle !== null) {
-                    fputcsv($csvHandle, [$normalizedUrl]);
+                    fwrite($csvHandle, $normalizedUrl . "\n");
                     fflush($csvHandle); // Force write to disk
                 }
 
@@ -139,7 +139,7 @@ function getSitemapUrls($sitemapUrl, $domain, $maxUrls = MAX_URLS, $csvHandle = 
     echo "Max URLs: $maxUrls\n";
 
     if ($csvHandle !== null) {
-        echo "Writing URLs to CSV in real-time...\n";
+        echo "Writing URLs to file in real-time...\n";
     }
     echo "\n";
 
@@ -289,9 +289,9 @@ function extractUrlsFromSitemap($dom, $domain, $maxUrls, &$urlCount, &$visited, 
 
             $visited[$normalizedUrl] = true;
 
-            // Write to CSV immediately if handle is provided
+            // Write to file immediately if handle is provided
             if ($csvHandle !== null) {
-                fputcsv($csvHandle, [$normalizedUrl]);
+                fwrite($csvHandle, $normalizedUrl . "\n");
                 fflush($csvHandle);
             }
 
@@ -708,7 +708,7 @@ function showHelp() {
     echo "  --sitemap=URL           Parse sitemap.xml instead of crawling\n";
     echo "                          (e.g., https://www.example.com/sitemap.xml)\n\n";
     echo "Optional:\n";
-    echo "  --output=FILE           Output CSV file (default: crawled_urls.csv)\n";
+    echo "  --output=FILE           Output file (default: crawled_urls.txt)\n";
     echo "  --max-depth=N           Maximum crawl depth (crawler only, default: unlimited)\n";
     echo "  --max-urls=N            Maximum URLs to process (default: 10000)\n";
     echo "  --include-params        Include URLs with query parameters\n";
@@ -720,7 +720,7 @@ function showHelp() {
     echo "  # Parse a sitemap.xml (much faster!)\n";
     echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml\n\n";
     echo "  # Parse sitemap with custom output\n";
-    echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml --output=urls.csv\n\n";
+    echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml --output=urls.txt\n\n";
     echo "  # Limit URLs from sitemap\n";
     echo "  ddev exec php crawler.php --sitemap=https://www.example.com/sitemap.xml --max-urls=500\n\n";
     echo "Note: Sitemap parsing supports both regular sitemaps and sitemap index files.\n";
@@ -755,7 +755,7 @@ function validateUrl($url) {
 $options = getArguments();
 
 // Get optional parameters
-$outputFile = $options['output'] ?? 'crawled_urls.csv';
+$outputFile = $options['output'] ?? 'crawled_urls.txt';
 $maxUrls = isset($options['max-urls']) ? (int)$options['max-urls'] : MAX_URLS;
 $includeParams = isset($options['include-params']);
 
@@ -782,7 +782,7 @@ if (isset($options['url'])) {
     }
     echo "Connection successful!\n\n";
 
-    // Open CSV file for writing BEFORE crawling
+    // Open file for writing BEFORE crawling
     $csvHandle = fopen($outputFile, 'w');
     if ($csvHandle === false) {
         echo "Error: Could not create file: $outputFile\n";
@@ -791,10 +791,10 @@ if (isset($options['url'])) {
 
     echo "Writing URLs to: $outputFile\n\n";
 
-    // Crawl URLs and write to CSV in real-time
+    // Crawl URLs and write to file in real-time
     $result = getUrls($referenceDomain, $maxDepth, $maxUrls, $verbose, $csvHandle);
 
-    // Close CSV file
+    // Close file
     fclose($csvHandle);
 
 } else {
@@ -820,7 +820,7 @@ if (isset($options['url'])) {
     }
     echo "Connection successful!\n\n";
 
-    // Open CSV file for writing BEFORE parsing
+    // Open file for writing BEFORE parsing
     $csvHandle = fopen($outputFile, 'w');
     if ($csvHandle === false) {
         echo "Error: Could not create file: $outputFile\n";
@@ -829,10 +829,10 @@ if (isset($options['url'])) {
 
     echo "Writing URLs to: $outputFile\n\n";
 
-    // Parse sitemap and write to CSV in real-time
+    // Parse sitemap and write to file in real-time
     $result = getSitemapUrls($sitemapUrl, $referenceDomain, $maxUrls, $csvHandle);
 
-    // Close CSV file
+    // Close file
     fclose($csvHandle);
 }
 
@@ -854,12 +854,12 @@ if (!$includeParams) {
     $originalCount = 0;
     $filteredCount = 0;
 
-    while (($data = fgetcsv($readHandle)) !== false) {
+    while (($line = fgets($readHandle)) !== false) {
         $originalCount++;
-        $url = $data[0];
+        $url = trim($line);
 
         if (strpos($url, '?') === false) {
-            fputcsv($writeHandle, [$url]);
+            fwrite($writeHandle, $url . "\n");
             $filteredCount++;
         }
     }
@@ -879,10 +879,10 @@ if (!$includeParams) {
     $result['urlCount'] = $filteredCount;
 }
 
-echo "✓ CSV file successfully created: $outputFile\n";
+echo "✓ File successfully created: $outputFile\n";
 echo "✓ Total URLs exported: " . $result['urlCount'] . "\n\n";
 echo "Next steps:\n";
-echo "  1. Review the CSV file: $outputFile\n";
+echo "  1. Review the file: $outputFile\n";
 echo "  2. Run: ddev exec php create-backstop-scenarios.php \\\n";
 echo "       --test=https://your-test-domain.com \\\n";
 echo "       --reference=$referenceDomain\n";

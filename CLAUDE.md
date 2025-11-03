@@ -62,10 +62,10 @@ This is a BackstopJS scenario generator tool that automates visual regression te
    - **Sitemap mode**: Parses sitemap.xml and sitemap index files
    - **Crawler mode**: Crawls a reference domain recursively
    - Extracts and filters URLs (excludes files, parameters, anchors, tel/mailto links)
-   - Outputs to `crawled_urls.csv`
+   - Outputs to `crawled_urls.txt`
 
 2. **Scenario Generation (create-backstop-scenarios.php)**
-   - Reads URLs from CSV file
+   - Reads URLs from text file (one URL per line)
    - Chunks URLs into groups of 40
    - Generates `scenarioUrls_N.js` files in `scenarios/pending/`
    - Maps reference URLs to test URLs by domain replacement
@@ -101,7 +101,7 @@ This is a BackstopJS scenario generator tool that automates visual regression te
 **create-backstop-scenarios.php:**
 - `--test`: The domain under test (e.g., DDEV local site)
 - `--reference`: The production/reference domain
-- `--csv`: Optional path to CSV file (default: crawled_urls.csv)
+- `--urls`: Optional path to URLs file (default: crawled_urls.txt)
 - URL chunking size: 40 URLs per file
 
 ## Common Commands
@@ -126,18 +126,18 @@ ddev exec php crawler.php --sitemap https://referencedomain.com/sitemap.xml
 ddev exec php crawler.php --url https://referencedomain.com
 ```
 
-Creates `crawled_urls.csv` in the root directory.
+Creates `crawled_urls.txt` in the root directory.
 
 **Options (both modes):**
 - `--max-urls=N`: Limit number of URLs (default: 10000)
-- `--output=FILE`: Custom output file (default: crawled_urls.csv)
+- `--output=FILE`: Custom output file (default: crawled_urls.txt)
 - `--include-params`: Include URLs with query parameters
 - `--verbose`: Show detailed error messages (crawler mode only)
 - `--help`: Show help
 
 **Important features:**
 - Sitemap mode: Parses sitemap index files and follows all sub-sitemaps
-- Crawler mode: Streams URLs directly to CSV (no memory issues with large sites)
+- Crawler mode: Streams URLs directly to file (no memory issues with large sites)
 - Smart URL filtering (tel:, mailto:, javascript:, etc.)
 - Detailed error reporting with categorization (crawler mode)
 - Real-time progress display
@@ -150,12 +150,12 @@ ddev exec php create-backstop-scenarios.php \
 ```
 Creates multiple `scenarioUrls_N.js` files in `scenarios/pending/`.
 
-**Optional: Use custom CSV file**
+**Optional: Use custom URLs file**
 ```bash
 ddev exec php create-backstop-scenarios.php \
   --test=https://example.ddev.site \
   --reference=https://www.example.com \
-  --csv=custom_urls.csv
+  --urls=custom_urls.txt
 ```
 
 3. **Activate First Scenario**
@@ -243,6 +243,6 @@ When testing a specific project:
 - **Crawler writes URLs in real-time** - safe to interrupt, no data loss
 - Crawler automatically filters invalid URLs (tel:, mailto:, javascript:, malformed URLs)
 - Error summary shows categorized failures (404, 403, 500, etc.) with examples
-- Manual CSV review recommended - check for missed or unwanted URLs
+- Manual review of URLs file recommended - check for missed or unwanted URLs
 - Test and reference domains are swapped during scenario generation for side-by-side comparison
 - Use `manage-scenarios.php auto` for a streamlined interactive workflow

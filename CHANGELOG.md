@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 ### Changed
+- Changed output format from CSV to TXT for URL storage (simpler, more readable)
+- Updated `crawler.php` to write plain text files (one URL per line)
+- Updated `create-backstop-scenarios.php` to read plain text files
+- Renamed `--csv` parameter to `--urls` in create-backstop-scenarios.php
+- Changed default filename from `crawled_urls.csv` to `crawled_urls.txt`
 ### Deprecated
 ### Removed
 ### Fixed
