@@ -4,6 +4,25 @@
 
 Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
 
+## What Does This Tool Do?
+
+**The Simple Explanation:**
+Imagine you have a website running locally on your computer (e.g., `http://mysite.ddev.site`) and you want to make sure it looks **exactly** like your live website (e.g., `https://www.mysite.com`). This tool:
+
+1. **Collects all pages** from your live website
+2. **Takes screenshots** of both the live site AND your local site
+3. **Compares them side-by-side** and shows you the differences
+4. **Manages everything** in small batches so your computer doesn't explode
+
+**Real-World Example:**
+```
+You're upgrading www.example.com locally at example.ddev.site
+→ This tool visits every page on www.example.com
+→ Takes screenshots of www.example.com (these are your "reference" images)
+→ Takes screenshots of example.ddev.site (these are your "test" images)
+→ Shows you exactly what's different between them
+```
+
 ## Features
 
 - 🗺️ **Sitemap Parsing**: Fast URL collection from sitemap.xml files (recommended)
@@ -15,96 +34,296 @@ Automated visual regression testing tool that crawls websites, generates test sc
 
 ## Prerequisites
 
-- [DDEV](https://ddev.com/) installed on your system (or PHP 8.2+)
-- [Node.js](https://nodejs.org/) installed on your system
-- [BackstopJS](https://github.com/garris/BackstopJS) installed globally: `npm install -g backstopjs`
+**You Need:**
 
-## Quick Start
+1. **DDEV** (recommended) - [Install here](https://ddev.com/)
+   - OR PHP 8.2+ if you want to run scripts without DDEV
+   - This README assumes you use DDEV (all commands use `ddev exec`)
 
-### 1. Setup
+2. **Node.js** - [Install here](https://nodejs.org/)
+
+3. **BackstopJS** - Install globally:
+   ```bash
+   npm install -g backstopjs
+   ```
+
+**Quick Check - Do You Have Everything?**
 ```bash
-# Clone the repository
+ddev version      # Should show DDEV version
+node --version    # Should show Node version
+backstop --version # Should show BackstopJS version
+```
+
+## Quick Start (The Complete Workflow)
+
+**Understanding the Workflow:**
+```
+Step 1: Setup          → Prepare your environment
+Step 2: Collect URLs   → Get list of pages from your website
+Step 3: Generate Tests → Create test scenarios
+Step 4: Run Tests      → Take screenshots and compare
+Step 5: Review         → Look at the differences
+```
+
+### Step 1: Setup
+
+```bash
+# Clone this repository
 git clone https://github.com/wwagner-net/create-backstop-scenarios.git
 cd create-backstop-scenarios
 
-# Start DDEV
+# Start DDEV (this starts a PHP environment)
 ddev start
 
-# Initialize BackstopJS (creates directory structure)
+# Initialize BackstopJS (creates folders for screenshots)
 backstop init
-# Note: You can delete the generated backstop.json file
 ```
 
-### 2. Collect URLs
+**What just happened?**
+- BackstopJS created a `backstop_data/` folder where screenshots will be saved
+- It also created a `backstop.json` file - you can delete this, we use `backstop.js` instead
 
-#### Option A: Parse Sitemap (Recommended - Faster!)
+---
+
+### Step 2: Collect URLs (Get All Pages From Your Website)
+
+**Which method should I use?**
+- ✅ **Use Sitemap** if your website has a sitemap.xml (most modern sites do)
+- ⚠️ **Use Crawler** if there's no sitemap or it's incomplete
+
+#### Method 1: Parse Sitemap (RECOMMENDED - Takes Seconds!)
+
 ```bash
 ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml
 ```
-This parses the sitemap.xml and creates `crawled_urls.txt` with all URLs.
 
-**Advantages:**
-- Much faster (seconds instead of minutes)
-- More complete (all URLs the site owner considers important)
-- No load on the server
+**What this does:**
+- Reads your sitemap.xml file
+- Extracts all URLs listed there
+- Saves them to `crawled_urls.txt`
 
-#### Option B: Crawl Website
+**Why is this better?**
+- ⚡ Much faster (seconds vs minutes)
+- 📋 More complete (gets ALL pages the site owner wants indexed)
+- 🚀 Doesn't stress your server
+
+**How do I find my sitemap?**
+Most websites have it at one of these locations:
+- `https://www.example.com/sitemap.xml`
+- `https://www.example.com/sitemap_index.xml`
+- Check `https://www.example.com/robots.txt` for the sitemap location
+
+#### Method 2: Crawl Website (Slower, But Works Without Sitemap)
+
 ```bash
 ddev exec php crawler.php --url https://www.example.com
 ```
-This crawls the website recursively and creates `crawled_urls.txt` with all discovered URLs.
 
-**Optional parameters (both modes):**
+**What this does:**
+- Visits your homepage
+- Follows every link it finds
+- Visits those pages and follows their links (recursive)
+- Saves all discovered URLs to `crawled_urls.txt`
+
+**When to use this:**
+- No sitemap available
+- You want to test what a real user would discover by clicking around
+
+**Common Options (Both Methods):**
 ```bash
-# Limit number of URLs
-ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --max-urls=500
+# Limit number of URLs (useful for testing)
+--max-urls=500
 
-# Custom output file
-ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --output=custom.txt
+# Custom output filename
+--output=my_urls.txt
 
-# Include URLs with query parameters
-ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --include-params
+# Include URLs with ?parameters (usually you don't want this)
+--include-params
 
-# Show detailed error messages (crawler mode only)
-ddev exec php crawler.php --url https://www.example.com --verbose
-
-# Show help
-ddev exec php crawler.php --help
+# Show detailed errors (crawler only)
+--verbose
 ```
 
-### 3. Generate Test Scenarios
+**Example:**
+```bash
+ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --max-urls=100
+```
+
+**After running:** Check the generated `crawled_urls.txt` file. It should contain one URL per line.
+
+---
+
+### Step 3: Generate Test Scenarios (Tell The Tool What To Compare)
+
 ```bash
 ddev exec php create-backstop-scenarios.php \
   --test=https://example.ddev.site \
   --reference=https://www.example.com
 ```
-This creates scenario files in `scenarios/pending/` directory.
 
-### 4. Process Scenarios
+**IMPORTANT - Understanding the Parameters:**
 
-#### Option A: Manual Mode (Step-by-Step)
+- `--reference`: This is your **live/production website** (the "correct" version)
+- `--test`: This is your **local/staging site** (the version you want to check)
+
+**Real Example:**
 ```bash
-# Activate next scenario
-ddev exec php manage-scenarios.php next
-
-# Run tests
-backstop reference --config ./backstop.js
-backstop test --config ./backstop.js
-
-# Review results in browser
-backstop openReport
-
-# Mark as done and move to next
-ddev exec php manage-scenarios.php done
-
-# Repeat until all scenarios are processed
+# I want to compare my local DDEV site against the live production site
+ddev exec php create-backstop-scenarios.php \
+  --test=https://mysite.ddev.site \
+  --reference=https://www.mysite.com
 ```
 
-#### Option B: Auto Mode (Interactive)
+**What this does:**
+- Reads `crawled_urls.txt`
+- Creates test scenarios (40 URLs per batch)
+- Saves them in `scenarios/pending/` folder
+
+**Why batches of 40?** Large websites can have thousands of pages. Testing 1000 pages at once would crash your computer. Batches keep things manageable.
+
+---
+
+### Step 4: Run The Tests (The Actual Screenshot Comparison)
+
+**You Have Two Options:**
+
+#### Option A: Manual Mode (Full Control, Step-by-Step)
+
+Best for: First-time users, when you want to see each batch
+
+```bash
+# 1. Activate the next batch (moves one batch from pending → active)
+ddev exec php manage-scenarios.php next
+
+# 2. Take reference screenshots (from your LIVE site)
+backstop reference --config ./backstop.js
+
+# 3. Take test screenshots (from your LOCAL site) and compare
+backstop test --config ./backstop.js
+
+# 4. Open the comparison report in your browser
+backstop openReport
+
+# 5. Mark this batch as done and activate the next one
+ddev exec php manage-scenarios.php done
+
+# Repeat steps 2-5 until all batches are done
+```
+
+**What each command does:**
+- `backstop reference`: Takes screenshots of your live site (these are the "correct" images)
+- `backstop test`: Takes screenshots of your local site and compares them to reference
+- `backstop openReport`: Opens a visual report showing differences side-by-side
+
+#### Option B: Auto Mode (Faster, Guided)
+
+Best for: When you know what you're doing, processing many batches
+
 ```bash
 ddev exec php manage-scenarios.php auto
 ```
-This guides you through all scenarios interactively.
+
+**What this does:**
+- Shows you the current batch
+- Waits for you to run `backstop reference` and `backstop test`
+- Asks if you want to continue to the next batch
+- Automatically manages the queue for you
+
+---
+
+### Step 5: Review Results
+
+After running `backstop test`, BackstopJS creates an HTML report.
+
+**Open it with:**
+```bash
+backstop openReport
+```
+
+**What you'll see:**
+- Side-by-side screenshots (reference vs test)
+- Differences highlighted in pink/magenta
+- Pass/fail status for each page
+- Different viewports (phone, tablet, desktop)
+
+**Understanding the results:**
+- ✅ **Green/Pass**: Pages look identical (or differences below threshold)
+- ❌ **Red/Fail**: Pages look different (check if intentional or a bug)
+
+---
+
+## How Does It Actually Work? (Behind The Scenes)
+
+**The Technical Flow:**
+
+1. **URL Collection Phase:**
+   ```
+   crawler.php reads sitemap.xml
+   → Extracts all <loc> URLs
+   → Filters out invalid URLs (files, tel:, mailto:, etc.)
+   → Writes to crawled_urls.txt
+   ```
+
+2. **Scenario Generation Phase:**
+   ```
+   create-backstop-scenarios.php reads crawled_urls.txt
+   → Splits into chunks of 40 URLs
+   → Creates scenarioUrls_1.js, scenarioUrls_2.js, etc.
+   → Each scenario contains URL pairs:
+     - referenceUrl: https://www.example.com/page
+     - url: https://example.ddev.site/page
+   → Saves to scenarios/pending/
+   ```
+
+3. **Scenario Management Phase:**
+   ```
+   manage-scenarios.php moves files between folders:
+
+   scenarios/pending/     → Waiting to be tested
+   scenarios/active/      → Currently being tested (only 1 at a time!)
+   scenarios/done/        → Archived with timestamp
+   ```
+
+4. **BackstopJS Execution Phase:**
+   ```
+   backstop reference:
+   → Loads scenarios/active/scenarioUrls_N.js
+   → Opens referenceUrl in a headless browser (Puppeteer)
+   → Takes screenshots at 3 viewports (phone, tablet, desktop)
+   → Saves to backstop_data/bitmaps_reference/
+
+   backstop test:
+   → Loads scenarios/active/scenarioUrls_N.js
+   → Opens test url in headless browser
+   → Takes screenshots at 3 viewports
+   → Compares pixel-by-pixel with reference images
+   → Generates HTML report with differences highlighted
+   ```
+
+**Why Only One Active Scenario?**
+- Testing 40 pages × 3 viewports = 120 screenshots
+- Testing 1000 pages at once = 3000 screenshots = computer crash
+- One batch at a time = stable performance
+
+**What Are Those .js Files?**
+Each `scenarioUrls_N.js` file looks like this:
+```javascript
+module.exports = [
+  {
+    label: "homepage",
+    referenceUrl: "https://www.example.com/",
+    url: "https://example.ddev.site/"
+  },
+  {
+    label: "about",
+    referenceUrl: "https://www.example.com/about",
+    url: "https://example.ddev.site/about"
+  }
+  // ... up to 40 URLs
+];
+```
+
+---
 
 ## Scripts Overview
 
@@ -338,50 +557,150 @@ git branch -D projectname
 
 ## Tips & Best Practices
 
-1. **Review Crawled URLs**: Always check `crawled_urls.txt` before generating scenarios. The crawler automatically filters invalid URLs, but manual review is still recommended.
+### For Beginners
 
-2. **Crawler is Safe to Interrupt**: URLs are written in real-time. If you need to stop crawling (Ctrl+C), all discovered URLs are already saved.
+1. **Start Small**
+   - Use `--max-urls=10` for your first test
+   - Test the workflow with just 10 pages before running the full site
+   - Example: `ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --max-urls=10`
 
-3. **Understanding Errors**: Check the error summary after crawling:
+2. **Check Your URLs File**
+   - Open `crawled_urls.txt` after crawling
+   - Make sure the URLs look correct
+   - Each line should be a complete URL starting with `http://` or `https://`
+
+3. **Understand Test vs Reference**
+   - **Reference** = The "correct" version (usually your live site)
+   - **Test** = The version you're checking (usually your local site)
+   - Think of it like: "I want to test my local site against the reference (live site)"
+
+4. **What If Everything Fails?**
+   - Cookie banners can cause false failures
+   - Add them to `removeSelectors` in `backstop.js`
+   - Example: `"removeSelectors": ["#cookie-banner", ".gdpr-notice"]`
+
+5. **Crawler Taking Forever?**
+   - Stop it with Ctrl+C (your URLs are already saved!)
+   - Use `--max-urls=500` to limit it
+   - Or switch to `--sitemap` mode (much faster!)
+
+### For Advanced Users
+
+6. **Crawler is Safe to Interrupt**: URLs are written in real-time. If you need to stop crawling (Ctrl+C), all discovered URLs are already saved.
+
+7. **Understanding Error Rates**: Check the error summary after crawling:
    - < 10% error rate: Normal, usually harmless broken links
    - 10-25% error rate: Moderate, some broken links to fix
    - > 25% error rate: High, possible connectivity or server issues
 
-4. **Adjust for Your Site**: Each website is different. Tune `backstop.js` settings:
-   - Add cookie banners to `removeSelectors`
-   - Increase `delay` for AJAX-heavy pages
-   - Adjust `misMatchThreshold` based on acceptable variance
+8. **Fine-Tune Test Parameters**: Edit `backstop.js` to adjust:
+   - `removeSelectors`: Hide cookie banners, popups, chat widgets
+   - `delay`: Increase for slow-loading or JavaScript-heavy pages (default: 5000ms)
+   - `misMatchThreshold`: Lower = stricter, higher = more forgiving (default: 10%)
+   - `hideSelectors`: Temporarily hide dynamic elements (like timestamps)
 
-5. **Use Auto Mode**: The `manage-scenarios.php auto` command provides the smoothest workflow for processing many scenarios.
+9. **Use Auto Mode for Bulk Testing**: The `manage-scenarios.php auto` command provides the smoothest workflow for processing many batches.
 
-6. **Monitor Performance**: Process one scenario at a time (40 URLs) to avoid memory issues and slow performance.
+10. **Alternative URL Collection**: You can use tools like [Screaming Frog SEO Spider](https://www.screamingfrog.co.uk/) to generate the URLs file instead of using `crawler.php`.
 
-7. **Archive Results**: Completed scenarios are timestamped and stored in `scenarios/done/` for future reference.
+### Common Mistakes
 
-8. **Prefer Sitemap Parsing**: If the website has a sitemap.xml, use `--sitemap` instead of `--url` for much faster URL collection. Most modern websites have sitemaps at `/sitemap.xml` or linked from `/robots.txt`.
+❌ **Wrong:** Using your local site as `--reference`
+```bash
+# DON'T DO THIS
+ddev exec php create-backstop-scenarios.php \
+  --reference=https://local.ddev.site \
+  --test=https://www.production.com
+```
 
-9. **Alternative Tools**: You can also use tools like [Screaming Frog SEO Spider](https://www.screamingfrog.co.uk/) to generate the URLs file instead of using `crawler.php`.
+✅ **Correct:** Live site is always the reference
+```bash
+# DO THIS
+ddev exec php create-backstop-scenarios.php \
+  --reference=https://www.production.com \
+  --test=https://local.ddev.site
+```
+
+---
+
+❌ **Wrong:** Testing 1000 pages at once (by modifying chunk size)
+
+✅ **Correct:** Stick with 40 URLs per batch (or your computer will struggle)
+
+---
+
+❌ **Wrong:** Running `backstop test` without `backstop reference` first
+
+✅ **Correct:** Always run `backstop reference` first to create baseline images
 
 ## Troubleshooting
 
-**No scenarios found in active directory:**
+### Common Problems & Solutions
+
+**Problem: "No scenarios found in active directory"**
 ```bash
+# Solution: Activate the next batch
 ddev exec php manage-scenarios.php next
 ```
 
-**Need to restart from scratch:**
+**Problem: BackstopJS says "No reference images found"**
 ```bash
+# Solution: You need to run backstop reference first
+backstop reference --config ./backstop.js
+
+# Then run the test
+backstop test --config ./backstop.js
+```
+
+**Problem: All tests are failing**
+- Cookie banners or popups are probably causing differences
+- Add them to `removeSelectors` in `backstop.js`
+- Example: `"removeSelectors": ["#CybotCookiebotDialog", "#cookie-consent"]`
+
+**Problem: Crawler finds no URLs or very few**
+- Check if the URL is correct and accessible
+- Try with `--verbose` to see errors
+- Make sure you're not being blocked (some sites block crawlers)
+
+**Problem: "Cannot connect" or timeout errors**
+- Your reference or test site might be down
+- Check if the URLs are accessible in a browser
+- Increase timeout in `backstop.js` if pages are slow
+
+**Problem: Tests are super slow**
+- Reduce `asyncCaptureLimit` in `backstop.js` (default: 5)
+- Lower values = fewer parallel screenshots = slower but more stable
+- Higher values = faster but might crash
+
+**Problem: Want to start over completely**
+```bash
+# Reset all scenarios back to pending
 ddev exec php manage-scenarios.php reset
 ```
 
-**Want to skip a problematic scenario:**
+**Problem: One batch is problematic, want to skip it**
 ```bash
+# Skip current scenario and move to next
 ddev exec php manage-scenarios.php skip
 ```
 
-**Check current progress:**
+**Problem: Lost track of where I am**
 ```bash
+# Check current progress
 ddev exec php manage-scenarios.php status
+
+# List all scenarios
+ddev exec php manage-scenarios.php list
+```
+
+**Problem: DDEV commands not working**
+```bash
+# Make sure DDEV is running
+ddev start
+
+# If you don't use DDEV, remove "ddev exec" from all commands
+# Instead of: ddev exec php crawler.php --url ...
+# Use: php crawler.php --url ...
 ```
 
 ## Resources
