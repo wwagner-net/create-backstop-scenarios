@@ -14,6 +14,17 @@ Imagine you have a website running locally on your computer (e.g., `http://mysit
 3. **Compares them side-by-side** and shows you the differences
 4. **Manages everything** in small batches so your computer doesn't explode
 
+## When do you need BackstopJS as a TYPO3 integrator?
+
+Visual Regression Testing is especially important for:
+- TYPO3 Core upgrades (e.g., from v12 to v13)
+- Extension updates with template changes
+- Template migrations (e.g., from Mask to Content Blocks)
+- Responsive design adjustments
+- Large TYPO3 instances with 100+ pages
+
+**Rule of thumb:** For 30+ pages or critical updates, the effort is worthwhile.
+
 **Real-World Example:**
 ```
 You're upgrading www.example.com locally at example.ddev.site
