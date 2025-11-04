@@ -356,7 +356,7 @@ git branch -D projectname
 
 8. **Prefer Sitemap Parsing**: If the website has a sitemap.xml, use `--sitemap` instead of `--url` for much faster URL collection. Most modern websites have sitemaps at `/sitemap.xml` or linked from `/robots.txt`.
 
-9. **Alternative Tools**: You can also use tools like [Screaming Frog SEO Spider](https://www.screamingfrogseoseo.com/) to generate the URLs file instead of using `crawler.php`.
+9. **Alternative Tools**: You can also use tools like [Screaming Frog SEO Spider](https://www.screamingfrog.co.uk/) to generate the URLs file instead of using `crawler.php`.
 
 ## Troubleshooting
 
