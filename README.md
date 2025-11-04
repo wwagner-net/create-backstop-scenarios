@@ -23,7 +23,11 @@ Automated visual regression testing tool that crawls websites, generates test sc
 
 ### 1. Setup
 ```bash
-# Clone and start DDEV
+# Clone the repository
+git clone https://github.com/wwagner-net/create-backstop-scenarios.git
+cd create-backstop-scenarios
+
+# Start DDEV
 ddev start
 
 # Initialize BackstopJS (creates directory structure)
