@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+### Security
+
+## [1.2.0] - 2025-11-09
+
+### Added
 - **Interactive Setup Wizard (setup.php)**
   - Step-by-step guided configuration process
   - User-friendly prompts for all settings
@@ -151,5 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-[1.1.0]: https://github.com/yourusername/create-backstop-scenarios/releases/tag/v1.1.0
-[1.0.0]: https://github.com/yourusername/create-backstop-scenarios/releases/tag/v1.0.0
+[1.2.0]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.2.0
+[1.1.1]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.1.1
+[1.1.0]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.1.0
+[1.0.0]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.0.0
