@@ -1,6 +1,29 @@
 <?php
 
 /**
+ * Load chunk size from config.json
+ */
+function getChunkSize() {
+    $configPath = 'config.json';
+    $defaultChunkSize = 40;
+
+    if (!file_exists($configPath)) {
+        return $defaultChunkSize;
+    }
+
+    try {
+        $config = json_decode(file_get_contents($configPath), true);
+        if (isset($config['chunkSize']) && is_numeric($config['chunkSize'])) {
+            return (int)$config['chunkSize'];
+        }
+    } catch (Exception $e) {
+        // If config can't be read, use default
+    }
+
+    return $defaultChunkSize;
+}
+
+/**
  * Parse command line arguments
  */
 function getArguments() {
@@ -73,11 +96,15 @@ $outputDir = 'scenarios/pending';
 // Array to save the URLs
 $urls = [];
 
+// Get chunk size from config.json (default: 40)
+$chunkSize = getChunkSize();
+
 echo "Configuration:\n";
 echo "  URLs File:        $urlsFile\n";
 echo "  Test Domain:      $testDomain\n";
 echo "  Reference Domain: $referenceDomain\n";
-echo "  Output Directory: $outputDir\n\n";
+echo "  Output Directory: $outputDir\n";
+echo "  Chunk Size:       $chunkSize URLs per file\n\n";
 
 // Create directory structure if it doesn't exist
 if (!file_exists('scenarios/pending')) {
@@ -106,8 +133,8 @@ if (empty($urls)) {
     exit(1);
 }
 
-// Split URLs into blocks
-$chunks = array_chunk($urls, 40);
+// Split URLs into blocks (using chunk size from earlier)
+$chunks = array_chunk($urls, $chunkSize);
 
 // Create JavaScript files
 foreach ($chunks as $index => $chunk) {

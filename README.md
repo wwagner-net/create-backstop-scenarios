@@ -97,6 +97,7 @@ ddev exec php setup.php
 
 The setup wizard will guide you through creating your `config.json` file by asking:
 - Project ID
+- Chunk size (how many URLs per batch file)
 - Cookie banner selectors to remove
 - Elements to hide (timestamps, chat widgets)
 - Delay before screenshots
@@ -385,6 +386,7 @@ ddev exec php setup.php
 
 **What it configures:**
 - Project ID
+- Chunk Size (URLs per batch file)
 - Remove Selectors (cookie banners, popups)
 - Hide Selectors (timestamps, dynamic content)
 - Screenshot delay (in milliseconds)
@@ -495,10 +497,11 @@ Common error types:
 Generates BackstopJS scenario files from the URLs file.
 
 **Features:**
-- Splits URLs into batches of 40
+- Splits URLs into configurable batches (default: 40, customizable in config.json)
 - Maps reference URLs to test URLs
 - Creates organized directory structure
 - Validates input and provides helpful error messages
+- Reads chunk size from config.json for consistent batch processing
 
 **Usage:**
 ```bash
@@ -609,6 +612,7 @@ BackstopJS configuration that loads scenarios from `scenarios/active/`.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `projectId` | String | `"example-project"` | Unique identifier for your project |
+| `chunkSize` | Number | `40` | URLs per scenario batch file (lower = more batches/easier on memory, higher = fewer batches/faster) |
 | `scenarios.removeSelectors` | Array | `["#CybotCookiebotDialog"]` | CSS selectors to remove before screenshots (e.g., cookie banners) |
 | `scenarios.hideSelectors` | Array | `[]` | CSS selectors to temporarily hide (e.g., timestamps, live chat) |
 | `scenarios.delay` | Number | `5000` | Wait time in milliseconds before screenshot |
@@ -620,6 +624,7 @@ BackstopJS configuration that loads scenarios from `scenarios/active/`.
 | `engine.debugWindow` | Boolean | `false` | Show browser window during testing |
 
 **Tips:**
+- **Chunk Size:** Use smaller chunks (e.g., 20) for systems with limited memory, or larger chunks (e.g., 60) for faster processing on powerful machines
 - **Cookie Banners:** Add them to `removeSelectors` to avoid false failures
 - **Dynamic Content:** Use `hideSelectors` for timestamps, counters, or live widgets
 - **Slow Sites:** Increase `delay` for JavaScript-heavy pages

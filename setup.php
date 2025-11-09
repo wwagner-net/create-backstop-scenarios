@@ -119,6 +119,7 @@ function printSummary($config) {
     echo color("═══════════════════════════════════════════════════════════════", 'green') . "\n\n";
 
     echo color("Project ID: ", 'cyan') . $config['projectId'] . "\n";
+    echo color("Chunk Size: ", 'cyan') . $config['chunkSize'] . " URLs per batch\n";
 
     if (!empty($config['scenarios']['removeSelectors'])) {
         echo color("Remove Selectors: ", 'cyan') . implode(', ', $config['scenarios']['removeSelectors']) . "\n";
@@ -163,6 +164,14 @@ echo color("Press Enter to use default values (shown in brackets).\n\n", 'white'
 echo color("━━━ Step 1: Project Information ━━━\n\n", 'magenta');
 
 $projectId = ask("Project ID (e.g., my-typo3-project)", "my-project");
+
+echo "\n";
+
+echo color("Chunk Size: Number of URLs per scenario batch file\n", 'white');
+echo color("Lower values = more batches (easier on memory)\n", 'white');
+echo color("Higher values = fewer batches (faster processing)\n\n", 'white');
+
+$chunkSize = (int)ask("URLs per batch", "40");
 
 echo "\n";
 
@@ -280,6 +289,7 @@ if ($configureAdvanced) {
 
 $config = [
     'projectId' => $projectId,
+    'chunkSize' => $chunkSize,
     'scenarios' => [
         'removeSelectors' => $removeSelectors,
         'hideSelectors' => $hideSelectors,
@@ -292,6 +302,7 @@ $config = [
     'report' => ['browser'],
     '_comments' => [
         'projectId' => 'Unique identifier for your project',
+        'chunkSize' => 'Number of URLs per scenario batch file (lower = more batches, higher = faster)',
         'removeSelectors' => 'CSS selectors to remove before screenshots (e.g., cookie banners)',
         'hideSelectors' => 'CSS selectors to temporarily hide (e.g., timestamps)',
         'delay' => 'Wait time in milliseconds before screenshot',

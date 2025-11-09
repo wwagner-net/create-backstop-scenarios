@@ -1,5 +1,6 @@
 {
   "projectId": "example-project",
+  "chunkSize": 40,
   "scenarios": {
     "removeSelectors": [
       "#CybotCookiebotDialog"
@@ -35,6 +36,7 @@
   "report": ["browser"],
   "_comments": {
     "projectId": "Unique identifier for your project",
+    "chunkSize": "Number of URLs per scenario batch file (default: 40). Lower values = more batches but easier on memory. Higher values = fewer batches but faster processing.",
     "removeSelectors": "Array of CSS selectors to remove before taking screenshots (e.g., cookie banners, chat widgets)",
     "hideSelectors": "Array of CSS selectors to temporarily hide (e.g., dynamic content like timestamps)",
     "delay": "Wait time in milliseconds before taking screenshot (increase for slow-loading pages)",

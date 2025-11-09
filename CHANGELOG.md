@@ -14,10 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Input validation and helpful explanations
   - Colorized terminal output for better UX
   - Creates properly formatted config.json automatically
-  - Asks for project ID, selectors, delays, thresholds, viewports
+  - Asks for project ID, chunk size, selectors, delays, thresholds, viewports
   - Advanced settings (asyncCaptureLimit, debug mode)
   - Warns if config.json already exists before overwriting
   - Provides "Next Steps" guide after completion
+
+- **Configurable Chunk Size**
+  - New `chunkSize` setting in config.json (default: 40)
+  - Controls how many URLs are grouped per scenario batch file
+  - Configurable via setup.php wizard
+  - create-backstop-scenarios.php now reads chunk size from config.json
+  - Allows optimization for different system resources (lower for limited memory, higher for faster processing)
+  - Displays chunk size in configuration output
 
 - **External configuration system via config.json**
   - New `config.example.json` template file with all configurable options
