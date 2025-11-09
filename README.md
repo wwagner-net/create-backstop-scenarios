@@ -78,6 +78,8 @@ Step 5: Review         → Look at the differences
 
 ### Step 1: Setup
 
+**Option A: Interactive Setup (Recommended for Beginners)**
+
 ```bash
 # Clone this repository
 git clone https://github.com/wwagner-net/create-backstop-scenarios.git
@@ -89,16 +91,38 @@ ddev start
 # Initialize BackstopJS (creates folders for screenshots)
 backstop init
 
+# Run the interactive setup wizard
+ddev exec php setup.php
+```
+
+The setup wizard will guide you through creating your `config.json` file by asking:
+- Project ID
+- Cookie banner selectors to remove
+- Elements to hide (timestamps, chat widgets)
+- Delay before screenshots
+- Mismatch threshold (how strict the comparison should be)
+- Viewports (screen sizes)
+
+**Option B: Manual Setup (For Advanced Users)**
+
+```bash
+# Clone, start DDEV, and initialize BackstopJS (same as above)
+git clone https://github.com/wwagner-net/create-backstop-scenarios.git
+cd create-backstop-scenarios
+ddev start
+backstop init
+
 # Copy the configuration template
 cp config.example.json config.json
+
+# Edit config.json manually
+nano config.json
 ```
 
 **What just happened?**
 - BackstopJS created a `backstop_data/` folder where screenshots will be saved
 - It also created a `backstop.json` file - you can delete this, we use `backstop.js` instead
-- You now have a `config.json` file that you can customize for your project (optional)
-
-**Optional:** Edit `config.json` to customize settings like cookie banner selectors, delays, etc. If you skip this, default settings will be used.
+- You now have a `config.json` file customized for your project
 
 ---
 
@@ -344,7 +368,41 @@ module.exports = [
 
 ## Scripts Overview
 
-### 1. crawler.php
+### 1. setup.php (NEW)
+Interactive setup wizard that creates your `config.json` file.
+
+**Features:**
+- Step-by-step guided configuration
+- Validates user input
+- Creates properly formatted config.json
+- Provides helpful explanations for each setting
+- Colorized terminal output for better UX
+
+**Usage:**
+```bash
+ddev exec php setup.php
+```
+
+**What it configures:**
+- Project ID
+- Remove Selectors (cookie banners, popups)
+- Hide Selectors (timestamps, dynamic content)
+- Screenshot delay (in milliseconds)
+- Mismatch threshold (comparison sensitivity)
+- Viewports (screen sizes)
+- Advanced settings (parallel screenshots, debug mode)
+
+**When to use:**
+- First-time setup of the tool
+- Starting a new project
+- When you're not sure what values to use
+
+**When to skip:**
+- You prefer manually editing JSON files
+- You're using a template from a colleague
+- You want to use default settings
+
+### 2. crawler.php
 Collects URLs either by parsing a sitemap.xml or by crawling a website.
 
 **Two Modes:**
@@ -433,7 +491,7 @@ Common error types:
 - **500 (Server error)**: Server-side issues - might need investigation
 - **Connection failed**: Timeout or unreachable pages
 
-### 2. create-backstop-scenarios.php
+### 3. create-backstop-scenarios.php
 Generates BackstopJS scenario files from the URLs file.
 
 **Features:**
@@ -458,7 +516,7 @@ ddev exec php create-backstop-scenarios.php \
 
 **Output:** Scenario files in `scenarios/pending/`
 
-### 3. manage-scenarios.php
+### 4. manage-scenarios.php
 Manages the scenario workflow and keeps track of progress.
 
 **Commands:**
@@ -493,7 +551,7 @@ ddev exec php manage-scenarios.php help
 - **active**: Currently being tested (only one at a time)
 - **done**: Completed and archived with timestamp
 
-### 4. backstop.js
+### 5. backstop.js
 BackstopJS configuration that loads scenarios from `scenarios/active/`.
 
 **Key Settings:**
@@ -605,11 +663,21 @@ git branch -D projectname
 
 ```
 .
+├── setup.php                        # Interactive setup wizard
 ├── crawler.php                      # URL crawler script
 ├── create-backstop-scenarios.php    # Scenario generator
 ├── manage-scenarios.php             # Workflow manager
 ├── backstop.js                      # BackstopJS config
+├── config.example.json              # Configuration template
+├── config.json                      # Your project config (created by setup.php)
 ├── crawled_urls.txt                 # Crawled URLs (generated)
+│
+├── .github/                         # GitHub templates
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── ISSUE_TEMPLATE/
+│       ├── bug_report.md
+│       ├── feature_request.md
+│       └── config.yml
 │
 ├── scenarios/
 │   ├── pending/                     # Generated scenarios (waiting)

@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Interactive Setup Wizard (setup.php)**
+  - Step-by-step guided configuration process
+  - User-friendly prompts for all settings
+  - Input validation and helpful explanations
+  - Colorized terminal output for better UX
+  - Creates properly formatted config.json automatically
+  - Asks for project ID, selectors, delays, thresholds, viewports
+  - Advanced settings (asyncCaptureLimit, debug mode)
+  - Warns if config.json already exists before overwriting
+  - Provides "Next Steps" guide after completion
+
 - **External configuration system via config.json**
   - New `config.example.json` template file with all configurable options
   - Configuration documentation with detailed explanations

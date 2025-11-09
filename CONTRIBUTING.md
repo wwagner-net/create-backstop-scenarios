@@ -28,7 +28,16 @@ Vielen Dank für dein Interesse, zu diesem Projekt beizutragen! Wir freuen uns �
    ddev start
    ```
 
-4. **Branch erstellen**
+4. **Konfiguration erstellen**
+   ```bash
+   # Option 1: Interaktiver Setup-Wizard (empfohlen)
+   ddev exec php setup.php
+
+   # Option 2: Manuelle Konfiguration
+   cp config.example.json config.json
+   ```
+
+5. **Branch erstellen**
    ```bash
    git checkout -b feature/deine-neue-funktion
    # oder
@@ -159,6 +168,7 @@ Bevor du einen Pull Request einreichst:
 
 3. **PHP-Syntax prüfen**
    ```bash
+   ddev exec php -l setup.php
    ddev exec php -l crawler.php
    ddev exec php -l create-backstop-scenarios.php
    ddev exec php -l manage-scenarios.php
@@ -168,14 +178,20 @@ Bevor du einen Pull Request einreichst:
 
 ```
 .
+├── setup.php                      # Interaktiver Setup-Wizard
 ├── crawler.php                    # URL-Sammlung (Sitemap/Crawler)
 ├── create-backstop-scenarios.php  # Scenario-Generierung
 ├── manage-scenarios.php           # Workflow-Management
 ├── backstop.js                    # BackstopJS-Konfiguration
 ├── config.example.json            # Konfigurations-Template
+├── config.json                    # Projekt-Konfiguration (generiert, nicht in Git)
+├── CONTRIBUTING.md                # Diese Datei
 ├── CLAUDE.md                      # AI-Assistant-Anleitung
 ├── CHANGELOG.md                   # Versions-Historie
-└── README.md                      # Haupt-Dokumentation
+├── README.md                      # Haupt-Dokumentation
+└── .github/                       # GitHub Templates
+    ├── PULL_REQUEST_TEMPLATE.md
+    └── ISSUE_TEMPLATE/
 ```
 
 ## 🎯 Wo du helfen kannst
