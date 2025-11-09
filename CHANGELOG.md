@@ -8,11 +8,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **External configuration system via config.json**
+  - New `config.example.json` template file with all configurable options
+  - Configuration documentation with detailed explanations
+  - Automatic config loading in `backstop.js` with fallback to defaults
+  - Support for project-specific settings without modifying core files
+  - Configuration options: projectId, removeSelectors, hideSelectors, delay, misMatchThreshold, viewports, engine settings
+
+- **Contributing guidelines and community templates**
+  - Comprehensive `CONTRIBUTING.md` with contribution workflow
+  - `.github/PULL_REQUEST_TEMPLATE.md` for standardized pull requests
+  - `.github/ISSUE_TEMPLATE/bug_report.md` for bug reports
+  - `.github/ISSUE_TEMPLATE/feature_request.md` for feature requests
+  - `.github/ISSUE_TEMPLATE/config.yml` for issue template configuration
+  - Code of Conduct section in CONTRIBUTING.md
+  - Detailed testing checklist for contributors
+
+- **Enhanced .gitignore**
+  - Ignores `config.json` (project-specific, created from example)
+  - Ignores `crawled_urls.txt` and other generated text files
+  - Ignores `scenarios/` directory (generated scenario files)
+
 ### Changed
-### Deprecated
-### Removed
-### Fixed
-### Security
+- **backstop.js**: Refactored to load configuration from external `config.json` file
+  - Moved all configurable values to config system
+  - Added helpful console warnings when config.json is missing
+  - Maintains backward compatibility with default values
+  - Configuration now separated from code for easier updates
+
+- **README.md**: Expanded documentation
+  - Added comprehensive "Configuration" section explaining config.json usage
+  - Added configuration options reference table
+  - Updated "Quick Start" to include config.json setup
+  - Enhanced "Contributing" section with links to new templates
+  - Added tips for common configuration scenarios
+
+### Improved
+- Developer experience: No more merge conflicts on `backstop.js` updates
+- Project workflow: Easier to maintain project-specific settings
+- Collaboration: Standardized contribution process
+- Documentation: Clearer setup and configuration instructions
 
 ## [1.1.1] - 2025-11-03
 

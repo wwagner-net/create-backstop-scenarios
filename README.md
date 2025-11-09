@@ -88,11 +88,17 @@ ddev start
 
 # Initialize BackstopJS (creates folders for screenshots)
 backstop init
+
+# Copy the configuration template
+cp config.example.json config.json
 ```
 
 **What just happened?**
 - BackstopJS created a `backstop_data/` folder where screenshots will be saved
 - It also created a `backstop.json` file - you can delete this, we use `backstop.js` instead
+- You now have a `config.json` file that you can customize for your project (optional)
+
+**Optional:** Edit `config.json` to customize settings like cookie banner selectors, delays, etc. If you skip this, default settings will be used.
 
 ---
 
@@ -499,20 +505,71 @@ BackstopJS configuration that loads scenarios from `scenarios/active/`.
 
 ## Configuration
 
-### Customize Test Parameters
-Edit `backstop.js` to adjust:
-- `removeSelectors`: Hide cookie banners, popups, etc.
-- `delay`: Increase for slow-loading pages
-- `misMatchThreshold`: Adjust sensitivity
-- `viewports`: Add/remove screen sizes
-- `hideSelectors`: Temporarily hide elements
+### Using config.json (Recommended)
 
-Example:
-```javascript
-"removeSelectors": ["#CybotCookiebotDialog", ".cookie-banner"],
-"delay": 5000,
-"misMatchThreshold": 10,
-```
+**NEW in v1.2.0:** You can now configure BackstopJS settings using a `config.json` file instead of editing `backstop.js` directly.
+
+**Benefits:**
+- No merge conflicts when updating the tool
+- Easy project-specific configurations
+- Keep your settings when switching branches
+- Share configurations across team members
+
+**Setup:**
+
+1. **Copy the example configuration**
+   ```bash
+   cp config.example.json config.json
+   ```
+
+2. **Edit config.json for your project**
+   ```json
+   {
+     "projectId": "my-typo3-project",
+     "scenarios": {
+       "removeSelectors": ["#CybotCookiebotDialog", ".cookie-banner"],
+       "hideSelectors": [".timestamp", ".live-chat"],
+       "delay": 5000,
+       "misMatchThreshold": 10
+     },
+     "viewports": [
+       { "label": "phone", "width": 320, "height": 480 },
+       { "label": "tablet", "width": 1024, "height": 768 },
+       { "label": "desktop", "width": 1280, "height": 1024 }
+     ]
+   }
+   ```
+
+3. **Run BackstopJS as usual**
+   ```bash
+   backstop reference --config ./backstop.js
+   ```
+   The configuration will be automatically loaded from `config.json`.
+
+**Configuration Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `projectId` | String | `"example-project"` | Unique identifier for your project |
+| `scenarios.removeSelectors` | Array | `["#CybotCookiebotDialog"]` | CSS selectors to remove before screenshots (e.g., cookie banners) |
+| `scenarios.hideSelectors` | Array | `[]` | CSS selectors to temporarily hide (e.g., timestamps, live chat) |
+| `scenarios.delay` | Number | `5000` | Wait time in milliseconds before screenshot |
+| `scenarios.misMatchThreshold` | Number | `10` | Acceptable difference percentage (0-100) |
+| `viewports` | Array | See example | Screen sizes to test |
+| `engine.asyncCaptureLimit` | Number | `5` | Parallel screenshots (lower = stable, higher = fast) |
+| `engine.asyncCompareLimit` | Number | `50` | Parallel comparisons |
+| `engine.debug` | Boolean | `false` | Enable debug mode |
+| `engine.debugWindow` | Boolean | `false` | Show browser window during testing |
+
+**Tips:**
+- **Cookie Banners:** Add them to `removeSelectors` to avoid false failures
+- **Dynamic Content:** Use `hideSelectors` for timestamps, counters, or live widgets
+- **Slow Sites:** Increase `delay` for JavaScript-heavy pages
+- **Sensitivity:** Lower `misMatchThreshold` for stricter testing
+
+### Manual Configuration (Legacy)
+
+You can still edit `backstop.js` directly if you prefer, but this is not recommended as it may cause merge conflicts during updates.
 
 ## Project-Based Testing
 
@@ -728,11 +785,23 @@ See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes and version u
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-When contributing, please:
+**Before contributing, please read:**
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Detailed contribution guidelines
+- [Code of Conduct](CONTRIBUTING.md#-code-of-conduct)
+
+**Quick checklist:**
 1. Update CHANGELOG.md following [Keep a Changelog](https://keepachangelog.com/) format
 2. Follow [Semantic Versioning](https://semver.org/) for version numbers
 3. Test your changes thoroughly
 4. Update documentation as needed
+5. Use the provided Pull Request template
+
+**How to submit:**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m '[FEATURE] Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## Author
 

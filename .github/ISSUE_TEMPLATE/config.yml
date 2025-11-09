@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Fragen & Diskussionen
+    url: https://github.com/wwagner-net/create-backstop-scenarios/discussions
+    about: Stelle Fragen oder diskutiere über das Projekt
+  - name: 📖 Dokumentation
+    url: https://github.com/wwagner-net/create-backstop-scenarios/blob/main/README.md
+    about: Lies die vollständige Dokumentation

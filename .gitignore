@@ -39,4 +39,16 @@ Temporary Items
 .claude
 
 # End of https://www.toptal.com/developers/gitignore/api/phpstorm,macos
+
+# BackstopJS generated data
 backstop_data/
+
+# Project-specific configuration (users create their own from config.example.json)
+config.json
+
+# Crawled URLs (project-specific)
+crawled_urls.txt
+*.txt
+
+# Scenario files (generated)
+scenarios/

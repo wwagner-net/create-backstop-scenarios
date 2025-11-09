@@ -1,0 +1,50 @@
+{
+  "projectId": "example-project",
+  "scenarios": {
+    "removeSelectors": [
+      "#CybotCookiebotDialog"
+    ],
+    "hideSelectors": [],
+    "delay": 5000,
+    "misMatchThreshold": 10,
+    "requireSameDimensions": true
+  },
+  "viewports": [
+    {
+      "label": "phone",
+      "width": 320,
+      "height": 480
+    },
+    {
+      "label": "tablet",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "label": "desktop",
+      "width": 1280,
+      "height": 1024
+    }
+  ],
+  "engine": {
+    "asyncCaptureLimit": 5,
+    "asyncCompareLimit": 50,
+    "debug": false,
+    "debugWindow": false
+  },
+  "report": ["browser"],
+  "_comments": {
+    "projectId": "Unique identifier for your project",
+    "removeSelectors": "Array of CSS selectors to remove before taking screenshots (e.g., cookie banners, chat widgets)",
+    "hideSelectors": "Array of CSS selectors to temporarily hide (e.g., dynamic content like timestamps)",
+    "delay": "Wait time in milliseconds before taking screenshot (increase for slow-loading pages)",
+    "misMatchThreshold": "Acceptable difference percentage between reference and test (0-100). Lower = stricter, higher = more forgiving",
+    "requireSameDimensions": "Require reference and test images to have same dimensions",
+    "viewports": "Screen sizes to test. Add/remove as needed for your project",
+    "asyncCaptureLimit": "Number of screenshots taken in parallel (lower = more stable, higher = faster)",
+    "asyncCompareLimit": "Number of comparisons done in parallel",
+    "debug": "Enable debug mode for troubleshooting",
+    "debugWindow": "Show browser window during testing (useful for debugging)",
+    "report": "Report types to generate. Options: 'browser', 'CI', 'json'"
+  }
+}

@@ -10,6 +10,61 @@ const path = require('path');
 // Path to the directory in which the active scenario files are stored
 const scenariosDir = path.resolve(__dirname, 'scenarios', 'active');
 
+// Load configuration from config.json or use defaults
+function loadConfig() {
+    const configPath = path.resolve(__dirname, 'config.json');
+
+    // Default configuration
+    const defaultConfig = {
+        projectId: 'example-project',
+        scenarios: {
+            removeSelectors: ['#CybotCookiebotDialog'],
+            hideSelectors: [],
+            delay: 5000,
+            misMatchThreshold: 10,
+            requireSameDimensions: true
+        },
+        viewports: [
+            { label: 'phone', width: 320, height: 480 },
+            { label: 'tablet', width: 1024, height: 768 },
+            { label: 'desktop', width: 1280, height: 1024 }
+        ],
+        engine: {
+            asyncCaptureLimit: 5,
+            asyncCompareLimit: 50,
+            debug: false,
+            debugWindow: false
+        },
+        report: ['browser']
+    };
+
+    // Try to load config.json
+    if (fs.existsSync(configPath)) {
+        try {
+            const userConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            console.log('✓ Loaded configuration from config.json');
+
+            // Merge user config with defaults (user config takes precedence)
+            return {
+                projectId: userConfig.projectId || defaultConfig.projectId,
+                scenarios: { ...defaultConfig.scenarios, ...userConfig.scenarios },
+                viewports: userConfig.viewports || defaultConfig.viewports,
+                engine: { ...defaultConfig.engine, ...userConfig.engine },
+                report: userConfig.report || defaultConfig.report
+            };
+        } catch (error) {
+            console.warn('⚠ Error reading config.json, using defaults:', error.message);
+            return defaultConfig;
+        }
+    } else {
+        console.warn('⚠ config.json not found, using default configuration');
+        console.warn('  Copy config.example.json to config.json to customize settings');
+        return defaultConfig;
+    }
+}
+
+const config = loadConfig();
+
 // Function to load all files that match the name pattern
 function loadScenarioUrls() {
     const scenarioUrls = [];
@@ -48,40 +103,24 @@ var scenarios = allScenarioUrls.map(function (scenarioUrl) {
         "referenceUrl": scenarioUrl.referenceUrl,
         "readyEvent": "",
         "readySelector": "",
-        "delay": 5000,
-        "hideSelectors": [],
-        "removeSelectors": ["#CybotCookiebotDialog"],
+        "delay": config.scenarios.delay,
+        "hideSelectors": config.scenarios.hideSelectors,
+        "removeSelectors": config.scenarios.removeSelectors,
         "hoverSelector": "",
         "clickSelector": "",
         "postInteractionWait": 0,
         "selectors": [],
         "selectorExpansion": true,
         "expect": 0,
-        "misMatchThreshold": 10,
-        "requireSameDimensions": true
+        "misMatchThreshold": config.scenarios.misMatchThreshold,
+        "requireSameDimensions": config.scenarios.requireSameDimensions
     };
 });
 
 module.exports =
     {
-        "id": "example-project",
-        "viewports": [
-            {
-                "label": "phone",
-                "width": 320,
-                "height": 480
-            },
-            {
-                "label": "tablet",
-                "width": 1024,
-                "height": 768
-            },
-            {
-                "label": "desktop",
-                "width": 1280,
-                "height": 1024
-            }
-        ],
+        "id": config.projectId,
+        "viewports": config.viewports,
         "onBeforeScript": "puppet/onBefore.js",
         "onReadyScript": "puppet/onReady.js",
         "scenarios": scenarios,
@@ -92,13 +131,13 @@ module.exports =
             "html_report": "backstop_data/html_report",
             "ci_report": "backstop_data/ci_report"
         },
-        "report": ["browser"],
+        "report": config.report,
         "engine": "puppeteer",
         "engineOptions": {
             "args": ["--no-sandbox"]
         },
-        "asyncCaptureLimit": 5,
-        "asyncCompareLimit": 50,
-        "debug": false,
-        "debugWindow": false
+        "asyncCaptureLimit": config.engine.asyncCaptureLimit,
+        "asyncCompareLimit": config.engine.asyncCompareLimit,
+        "debug": config.engine.debug,
+        "debugWindow": config.engine.debugWindow
     };
