@@ -1,6 +1,6 @@
 # BackstopJS Scenario Generator
 
-**Version 1.2.0**
+**Version 1.2.1**
 
 Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
 

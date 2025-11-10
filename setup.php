@@ -112,6 +112,51 @@ function createConfig($config) {
     file_put_contents('config.json', $json);
 }
 
+function askViewports() {
+    $viewports = [];
+
+    echo "\n" . color("How many viewports do you want to configure?", 'yellow') . " [1-10]: ";
+    $handle = fopen("php://stdin", "r");
+    $count = (int)trim(fgets($handle));
+    fclose($handle);
+
+    // Validate count
+    if ($count < 1 || $count > 10) {
+        echo color("⚠ Please enter a number between 1 and 10.\n", 'red');
+        return askViewports();
+    }
+
+    echo "\n";
+
+    for ($i = 1; $i <= $count; $i++) {
+        echo color("━━━ Viewport #$i ━━━\n", 'cyan');
+
+        $label = ask("Label (e.g., phone, tablet, desktop)", "viewport-$i", true);
+
+        $width = (int)ask("Width in pixels", "1280");
+        while ($width < 1 || $width > 5000) {
+            echo color("⚠ Width must be between 1 and 5000 pixels.\n", 'red');
+            $width = (int)ask("Width in pixels", "1280");
+        }
+
+        $height = (int)ask("Height in pixels", "1024");
+        while ($height < 1 || $height > 5000) {
+            echo color("⚠ Height must be between 1 and 5000 pixels.\n", 'red');
+            $height = (int)ask("Height in pixels", "1024");
+        }
+
+        $viewports[] = [
+            'label' => $label,
+            'width' => $width,
+            'height' => $height,
+        ];
+
+        echo color("✓ Viewport '$label' ({$width}x{$height}) added\n\n", 'green');
+    }
+
+    return $viewports;
+}
+
 function printSummary($config) {
     echo "\n";
     echo color("═══════════════════════════════════════════════════════════════", 'green') . "\n";
@@ -132,6 +177,10 @@ function printSummary($config) {
     echo color("Delay: ", 'cyan') . $config['scenarios']['delay'] . "ms\n";
     echo color("Mismatch Threshold: ", 'cyan') . $config['scenarios']['misMatchThreshold'] . "%\n";
     echo color("Viewports: ", 'cyan') . count($config['viewports']) . " configured\n";
+
+    foreach ($config['viewports'] as $viewport) {
+        echo color("  - ", 'cyan') . "{$viewport['label']}: {$viewport['width']}x{$viewport['height']}\n";
+    }
 
     echo "\n" . color("✓ Configuration saved to config.json", 'green') . "\n\n";
 }
@@ -228,6 +277,9 @@ echo "\n";
 
 echo color("━━━ Step 4: Viewports (Screen Sizes) ━━━\n\n", 'magenta');
 
+echo color("Viewports define the screen sizes for screenshot comparison.\n", 'white');
+echo color("Typical sizes: phone (320x480), tablet (1024x768), desktop (1280x1024)\n\n", 'white');
+
 $useDefaultViewports = askYesNo("Use default viewports (phone, tablet, desktop)?", true);
 
 if ($useDefaultViewports) {
@@ -236,14 +288,9 @@ if ($useDefaultViewports) {
         ['label' => 'tablet', 'width' => 1024, 'height' => 768],
         ['label' => 'desktop', 'width' => 1280, 'height' => 1024],
     ];
+    echo color("\n✓ Using default viewports\n", 'green');
 } else {
-    echo color("\nCustom viewport configuration is advanced.\n", 'yellow');
-    echo color("For now, we'll use the defaults. You can edit config.json later.\n", 'yellow');
-    $viewports = [
-        ['label' => 'phone', 'width' => 320, 'height' => 480],
-        ['label' => 'tablet', 'width' => 1024, 'height' => 768],
-        ['label' => 'desktop', 'width' => 1280, 'height' => 1024],
-    ];
+    $viewports = askViewports();
 }
 
 echo "\n";

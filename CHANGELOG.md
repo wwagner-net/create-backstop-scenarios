@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 ### Security
 
+## [1.2.1] - 2025-11-10
+
+### Added
+- **Interactive custom viewport configuration in setup.php**
+  - New `askViewports()` function for defining custom viewports
+  - Allows users to specify 1-10 custom viewports with label, width, and height
+  - Input validation for dimensions (1-5000 pixels)
+  - Improved viewport summary display in configuration output
+
+### Fixed
+- **Setup wizard now properly handles custom viewport configuration**
+  - Previously, declining default viewports still created default viewports with a "edit later" message
+  - Now prompts users to interactively configure custom viewports when declining defaults
+  - Displays all configured viewports in the summary with their dimensions
+
 ## [1.2.0] - 2025-11-09
 
 ### Added
@@ -160,6 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
+[1.2.1]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.2.1
 [1.2.0]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.2.0
 [1.1.1]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.1.1
 [1.1.0]: https://github.com/wwagner-net/create-backstop-scenarios/releases/tag/v1.1.0
