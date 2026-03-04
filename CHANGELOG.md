@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+- **Fixed sitemap parser failing with relative URLs in sitemap `<loc>` tags** (`crawler.php`)
+  - Some CMS systems (e.g., TYPO3) generate sitemaps with relative URLs like `/sitemap.xml?sitemap=pages&cHash=...` (in sitemap indexes) and `/some-page` (in regular sitemaps) instead of absolute URLs
+  - Sitemap index: relative sub-sitemap URLs are now resolved against the base sitemap URL before fetching
+  - Regular sitemaps: relative page URLs are now resolved against the domain before normalization
 ### Security
 
 ## [1.2.1] - 2025-11-10

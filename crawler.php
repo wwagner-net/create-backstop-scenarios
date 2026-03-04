@@ -204,7 +204,7 @@ function parseSitemap($sitemapUrl, $domain, $maxUrls, &$urlCount, &$visited, &$e
 
     if ($sitemapIndexElements->length > 0) {
         echo "Detected sitemap index, processing sub-sitemaps...\n";
-        return parseSitemapIndex($dom, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
+        return parseSitemapIndex($dom, $sitemapUrl, $domain, $maxUrls, $urlCount, $visited, $errorLog, $csvHandle);
     }
 
     // It's a regular sitemap, extract URLs
@@ -215,7 +215,7 @@ function parseSitemap($sitemapUrl, $domain, $maxUrls, &$urlCount, &$visited, &$e
 /**
  * Parse a sitemap index and process all sub-sitemaps
  */
-function parseSitemapIndex($dom, $domain, $maxUrls, &$urlCount, &$visited, &$errorLog, $csvHandle = null) {
+function parseSitemapIndex($dom, $baseUrl, $domain, $maxUrls, &$urlCount, &$visited, &$errorLog, $csvHandle = null) {
     $urls = [];
     $sitemapElements = $dom->getElementsByTagName('sitemap');
 
@@ -230,6 +230,19 @@ function parseSitemapIndex($dom, $domain, $maxUrls, &$urlCount, &$visited, &$err
         $locElements = $sitemapElement->getElementsByTagName('loc');
         if ($locElements->length > 0) {
             $subSitemapUrl = trim($locElements->item(0)->nodeValue);
+
+            // Resolve relative URLs using the base sitemap URL
+            if (!preg_match('#^https?://#i', $subSitemapUrl)) {
+                $parsed = parse_url($baseUrl);
+                $baseScheme = $parsed['scheme'] ?? 'https';
+                $baseHost = $parsed['host'] ?? '';
+                if (strpos($subSitemapUrl, '/') === 0) {
+                    $subSitemapUrl = $baseScheme . '://' . $baseHost . $subSitemapUrl;
+                } else {
+                    $basePath = rtrim(dirname($parsed['path'] ?? '/'), '/');
+                    $subSitemapUrl = $baseScheme . '://' . $baseHost . $basePath . '/' . $subSitemapUrl;
+                }
+            }
 
             // Recursively parse the sub-sitemap
             echo "Loading sub-sitemap: $subSitemapUrl\n";
@@ -259,6 +272,15 @@ function extractUrlsFromSitemap($dom, $domain, $maxUrls, &$urlCount, &$visited, 
         $locElements = $urlElement->getElementsByTagName('loc');
         if ($locElements->length > 0) {
             $url = trim($locElements->item(0)->nodeValue);
+
+            // Resolve relative URLs using the domain as base
+            if (!preg_match('#^https?://#i', $url) && !empty($domain)) {
+                if (strpos($url, '/') === 0) {
+                    $url = $domain . $url;
+                } elseif (!empty($url)) {
+                    $url = $domain . '/' . $url;
+                }
+            }
 
             // Normalize URL
             $normalizedUrl = normalizeUrl($url);
