@@ -1,6 +1,6 @@
 # BackstopJS Scenario Generator
 
-**Version 1.2.1**
+**Version 1.3.0**
 
 Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
 
@@ -36,36 +36,60 @@ You're upgrading www.example.com locally at example.ddev.site
 
 ## Features
 
+- 🖥️ **Browser GUI**: Complete 5-step wizard — no command line needed
 - 🗺️ **Sitemap Parsing**: Fast URL collection from sitemap.xml files (recommended)
 - 🕷️ **Automated URL Crawling**: Recursively crawl websites and extract all relevant URLs
 - 📦 **Batch Management**: Process large websites in manageable chunks (40 URLs per batch)
 - 🎯 **Smart Queue System**: Only test one batch at a time for optimal performance
 - 🔄 **Workflow Automation**: Easy-to-use commands for the entire test lifecycle
 - 📊 **Progress Tracking**: Always know which scenarios are pending, active, or completed
+- 🗑️ **One-Click Cleanup**: Delete all screenshots and reports to start fresh
 
 ## Prerequisites
 
 **You Need:**
 
-1. **DDEV** (recommended) - [Install here](https://ddev.com/)
-   - OR PHP 8.2+ if you want to run scripts without DDEV
-   - This README assumes you use DDEV (all commands use `ddev exec`)
+1. **DDEV** — [Install here](https://ddev.com/)
 
-2. **Node.js** - [Install here](https://nodejs.org/)
+That's it. Node.js 20, BackstopJS, and Chromium are automatically installed inside the DDEV container when you run `ddev start` for the first time. No global npm installs needed.
 
-3. **BackstopJS** - Install globally:
-   ```bash
-   npm install -g backstopjs
-   ```
-
-**Quick Check - Do You Have Everything?**
+**Quick Check:**
 ```bash
-ddev version      # Should show DDEV version
-node --version    # Should show Node version
-backstop --version # Should show BackstopJS version
+ddev version  # Should show DDEV version
 ```
 
-## Quick Start (The Complete Workflow)
+## Quick Start
+
+### Option A: Browser GUI (Recommended)
+
+```bash
+# Clone this repository
+git clone https://github.com/wwagner-net/create-backstop-scenarios.git
+cd create-backstop-scenarios
+
+# Start DDEV — first start installs BackstopJS + Chromium automatically (~2 min)
+ddev start
+
+# Initialize BackstopJS data directories (creates backstop_data/)
+ddev exec backstop init
+
+# Open the GUI
+ddev launch
+```
+
+The GUI walks you through the complete workflow in 5 steps:
+
+| Step | What happens |
+|------|-------------|
+| 1. Konfiguration | Set project ID, selectors, delay, viewports → saves `config.json` |
+| 2. URLs sammeln | Enter sitemap URL or crawl URL → streams live output |
+| 3. URLs prüfen | Review, filter and edit the collected URLs |
+| 4. Szenarien | Enter test + reference domain → generates scenario files |
+| 5. Tests | Take reference screenshots, run tests, view report |
+
+---
+
+### Option B: CLI Workflow (Advanced)
 
 **Understanding the Workflow:**
 ```
@@ -76,58 +100,28 @@ Step 4: Run Tests      → Take screenshots and compare
 Step 5: Review         → Look at the differences
 ```
 
-### Step 1: Setup
-
-**Option A: Interactive Setup (Recommended for Beginners)**
+#### Step 1: Setup
 
 ```bash
-# Clone this repository
 git clone https://github.com/wwagner-net/create-backstop-scenarios.git
 cd create-backstop-scenarios
-
-# Start DDEV (this starts a PHP environment)
 ddev start
+ddev exec backstop init
 
-# Initialize BackstopJS (creates folders for screenshots)
-backstop init
-
-# Run the interactive setup wizard
+# Optional: run the interactive setup wizard
 ddev exec php setup.php
-```
-
-The setup wizard will guide you through creating your `config.json` file by asking:
-- Project ID
-- Chunk size (how many URLs per batch file)
-- Cookie banner selectors to remove
-- Elements to hide (timestamps, chat widgets)
-- Delay before screenshots
-- Mismatch threshold (how strict the comparison should be)
-- Viewports (screen sizes)
-
-**Option B: Manual Setup (For Advanced Users)**
-
-```bash
-# Clone, start DDEV, and initialize BackstopJS (same as above)
-git clone https://github.com/wwagner-net/create-backstop-scenarios.git
-cd create-backstop-scenarios
-ddev start
-backstop init
-
-# Copy the configuration template
+# Or copy and edit the config template manually:
 cp config.example.json config.json
-
-# Edit config.json manually
-nano config.json
 ```
 
 **What just happened?**
 - BackstopJS created a `backstop_data/` folder where screenshots will be saved
-- It also created a `backstop.json` file - you can delete this, we use `backstop.js` instead
+- It also created a `backstop.json` file — you can delete this, we use `backstop.js` instead
 - You now have a `config.json` file customized for your project
 
 ---
 
-### Step 2: Collect URLs (Get All Pages From Your Website)
+#### Step 2: Collect URLs (Get All Pages From Your Website)
 
 **Which method should I use?**
 - ✅ **Use Sitemap** if your website has a sitemap.xml (most modern sites do)
@@ -195,7 +189,7 @@ ddev exec php crawler.php --sitemap https://www.example.com/sitemap.xml --max-ur
 
 ---
 
-### Step 3: Generate Test Scenarios (Tell The Tool What To Compare)
+#### Step 3: Generate Test Scenarios (Tell The Tool What To Compare)
 
 ```bash
 ddev exec php create-backstop-scenarios.php \
@@ -225,7 +219,7 @@ ddev exec php create-backstop-scenarios.php \
 
 ---
 
-### Step 4: Run The Tests (The Actual Screenshot Comparison)
+#### Step 4: Run The Tests (The Actual Screenshot Comparison)
 
 **You Have Two Options:**
 
@@ -273,7 +267,7 @@ ddev exec php manage-scenarios.php auto
 
 ---
 
-### Step 5: Review Results
+#### Step 5: Review Results
 
 After running `backstop test`, BackstopJS creates an HTML report.
 
@@ -367,10 +361,33 @@ module.exports = [
 
 ---
 
-## Scripts Overview
+## Scripts & Files Overview
 
-### 1. setup.php (NEW)
-Interactive setup wizard that creates your `config.json` file.
+### 0. GUI (browser-based, recommended)
+
+The GUI covers the complete workflow without any command-line knowledge.
+
+**Access:**
+```
+https://create-backstop-scenarios.ddev.site
+```
+
+**Files:**
+- `index.php` — entry point (redirects to `/gui/`)
+- `gui/index.php` — 5-step wizard (vanilla HTML/CSS/JS, no build step)
+- `gui/api/config.php` — reads/writes `config.json`
+- `gui/api/urls.php` — reads/writes `crawled_urls.txt`
+- `gui/api/scenarios-status.php` — returns pending/active/done counts + reference screenshot status
+- `gui/api/cleanup.php` — deletes all test artifacts (bitmaps + reports)
+- `gui/api/stream/crawl.php` — streams crawler output via SSE
+- `gui/api/stream/generate.php` — streams scenario generation output via SSE
+- `gui/api/stream/manage.php` — streams scenario management output via SSE
+- `gui/api/stream/backstop.php` — streams BackstopJS output via SSE
+
+---
+
+### 1. setup.php
+Interactive CLI wizard that creates your `config.json` file (alternative to the GUI config step).
 
 **Features:**
 - Step-by-step guided configuration
@@ -668,14 +685,29 @@ git branch -D projectname
 
 ```
 .
-├── setup.php                        # Interactive setup wizard
+├── index.php                        # GUI entry point (redirects to /gui/)
+├── setup.php                        # Interactive CLI setup wizard
 ├── crawler.php                      # URL crawler script
 ├── create-backstop-scenarios.php    # Scenario generator
 ├── manage-scenarios.php             # Workflow manager
 ├── backstop.js                      # BackstopJS config
 ├── config.example.json              # Configuration template
-├── config.json                      # Your project config (created by setup.php)
-├── crawled_urls.txt                 # Crawled URLs (generated)
+├── config.json                      # Your project config (git-ignored)
+├── crawled_urls.txt                 # Crawled URLs (generated, git-ignored)
+│
+├── gui/                             # Browser-based GUI
+│   ├── index.php                    # 5-step wizard (single-page app)
+│   └── api/
+│       ├── common.php               # Shared helpers (SSE, JSON responses)
+│       ├── config.php               # Config read/write API
+│       ├── urls.php                 # URL list read/write API
+│       ├── scenarios-status.php     # Scenario counts + reference status
+│       ├── cleanup.php              # Delete screenshots & reports
+│       └── stream/
+│           ├── crawl.php            # SSE: crawler output
+│           ├── generate.php         # SSE: scenario generation output
+│           ├── manage.php           # SSE: scenario management output
+│           └── backstop.php         # SSE: BackstopJS output
 │
 ├── .github/                         # GitHub templates
 │   ├── PULL_REQUEST_TEMPLATE.md
@@ -693,7 +725,7 @@ git branch -D projectname
     ├── bitmaps_reference/           # Reference screenshots
     ├── bitmaps_test/                # Test screenshots & diffs
     ├── html_report/                 # Visual comparison reports
-    └── engine_scripts/              # Puppeteer/Playwright scripts
+    └── engine_scripts/              # Puppeteer hooks and cookie files
 ```
 
 ## Tips & Best Practices
@@ -814,6 +846,10 @@ backstop test --config ./backstop.js
 - Higher values = faster but might crash
 
 **Problem: Want to start over completely**
+
+In the GUI (Step 5): Click "🗑 Screenshots & Berichte löschen" to clear all test artifacts, then "↺ Szenarien zurücksetzen" to move all scenarios back to pending.
+
+CLI alternative:
 ```bash
 # Reset all scenarios back to pending
 ddev exec php manage-scenarios.php reset

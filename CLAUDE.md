@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**Current Version:** 1.2.1
+**Current Version:** 1.3.0
 
 ## Version Management
 
@@ -55,7 +55,22 @@ This is a BackstopJS scenario generator tool that automates visual regression te
 
 ## Architecture
 
-### Four-Phase Workflow with Queue Management
+### GUI (gui/)
+
+Browser-based single-page wizard served by DDEV at `https://create-backstop-scenarios.ddev.site`. PHP SSE streams (Server-Sent Events) for real-time output. All commands run inside the DDEV container via `proc_open`.
+
+- `gui/index.php` — 5-step wizard (vanilla HTML/CSS/JS)
+- `gui/api/common.php` — shared: `jsonResponse()`, `startSSE()`, `sendSSEEvent()`, `runCommandSSE()`, `getNpmGlobalBin()`
+- `gui/api/config.php` — GET/POST config.json
+- `gui/api/urls.php` — GET/POST crawled_urls.txt
+- `gui/api/scenarios-status.php` — counts pending/active/done; checks `referenceExists` (PNG in bitmaps_reference/)
+- `gui/api/cleanup.php` — POST: deletes contents of bitmaps_reference/, bitmaps_test/, html_report/, ci_report/
+- `gui/api/stream/crawl.php` — SSE wrapper for crawler.php
+- `gui/api/stream/generate.php` — SSE wrapper for create-backstop-scenarios.php
+- `gui/api/stream/manage.php` — SSE wrapper for manage-scenarios.php (auto-confirms reset via stdin)
+- `gui/api/stream/backstop.php` — SSE wrapper for backstop binary
+
+### Five-Phase Workflow with Queue Management
 
 1. **URL Collection (crawler.php)**
    - Two modes: sitemap parsing (fast) or recursive crawling
@@ -106,13 +121,24 @@ This is a BackstopJS scenario generator tool that automates visual regression te
 
 ## Common Commands
 
-### Initial Setup
+### GUI (Recommended)
+
+The easiest way to use the tool is the browser-based GUI:
+```bash
+ddev start  # First time: automatically installs BackstopJS (~200MB, takes a few minutes)
+# Then open:
+open https://create-backstop-scenarios.ddev.site
+```
+
+The GUI provides a 5-step wizard covering the complete workflow.
+
+### Initial Setup (CLI alternative)
 ```bash
 ddev start
 backstop init  # Creates backstop_data structure (backstop.json can be deleted)
 ```
 
-### Complete Workflow (Recommended)
+### Complete Workflow (CLI)
 
 1. **Collect URLs from Reference Domain**
 
@@ -210,7 +236,7 @@ backstop openReport
 - Database: MariaDB 10.11 (included but not actively used)
 - Access: `https://create-backstop-scenarios.ddev.site`
 
-**No package.json:** BackstopJS should be installed globally or via DDEV.
+**Node.js 20 in DDEV:** Configured via `nodejs_version: "20"` in `.ddev/config.yaml`. BackstopJS is automatically installed globally inside the DDEV container on `ddev start` (via post-start hook). No package.json needed — BackstopJS runs inside DDEV.
 
 ## Project-Specific Workflow
 
@@ -226,13 +252,15 @@ When testing a specific project:
 
 ## File Structure
 
+- **index.php**: GUI entry point (redirects to `/gui/`)
+- **gui/**: Browser-based GUI (see Architecture section above)
 - **scenarios/pending/**: Newly generated scenario files waiting to be tested
 - **scenarios/active/**: Currently active scenario file (only one at a time)
 - **scenarios/done/**: Archived completed scenarios with timestamps
-- **backstop_data/bitmaps_reference/**: Reference screenshots
-- **backstop_data/bitmaps_test/**: Test run screenshots and diffs
-- **backstop_data/html_report/**: HTML comparison reports
-- **backstop_data/engine_scripts/**: Puppeteer/Playwright hooks and cookie files
+- **backstop_data/bitmaps_reference/**: Reference screenshots (cleared by cleanup.php)
+- **backstop_data/bitmaps_test/**: Test run screenshots and diffs (cleared by cleanup.php)
+- **backstop_data/html_report/**: HTML comparison reports (cleared by cleanup.php)
+- **backstop_data/engine_scripts/**: Puppeteer hooks and cookie files (**not** cleared by cleanup)
 
 ## Important Notes
 
@@ -240,9 +268,11 @@ When testing a specific project:
 - Only one scenario file is active at a time, preventing memory issues with large test sets
 - The `backstop.js` configuration only loads files from `scenarios/active/`
 - Completed scenarios are archived with timestamps in `scenarios/done/`
-- **Crawler writes URLs in real-time** - safe to interrupt, no data loss
+- **Crawler writes URLs in real-time** — safe to interrupt, no data loss
 - Crawler automatically filters invalid URLs (tel:, mailto:, javascript:, malformed URLs)
 - Error summary shows categorized failures (404, 403, 500, etc.) with examples
-- Manual review of URLs file recommended - check for missed or unwanted URLs
+- Manual review of URLs file recommended — check for missed or unwanted URLs
 - Test and reference domains are swapped during scenario generation for side-by-side comparison
-- Use `manage-scenarios.php auto` for a streamlined interactive workflow
+- Use `manage-scenarios.php auto` for a streamlined interactive CLI workflow
+- **GUI cleanup** deletes bitmaps_reference/, bitmaps_test/, html_report/, ci_report/ — `engine_scripts/` is intentionally preserved
+- **"Tests ausführen"** is disabled in the GUI until reference screenshots exist (checks for PNG files in bitmaps_reference/)

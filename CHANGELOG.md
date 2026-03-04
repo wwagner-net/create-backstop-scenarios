@@ -12,11 +12,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+### Security
+
+## [1.3.0] - 2026-03-04
+
+### Added
+- **Browser-based GUI** for complete workflow management without CLI
+  - Accessible at `https://create-backstop-scenarios.ddev.site` after `ddev start`
+  - 5-step wizard: Configuration → URL Collection → URL Review → Scenario Generation → Test Execution
+  - Real-time command output via Server-Sent Events (SSE) for all long-running operations
+  - Step 1 (Configuration): Full `config.json` editor — replaces `setup.php` interactive CLI wizard
+  - Step 2 (URLs): Sitemap or crawl mode with live output streaming
+  - Step 3 (URL Review): Editable, filterable URL list with save functionality
+  - Step 4 (Generate): Test/reference domain input, generates scenario files with live output
+  - Step 5 (Tests): Scenario status dashboard, BackstopJS controls with live output
+    - "Tests ausführen" disabled until reference screenshots exist
+    - Report opens automatically after a test run; dismissable banner notification
+    - "🗑 Screenshots & Berichte löschen" button to clear all test artifacts in one click
+  - Files: `index.php`, `gui/index.php`, `gui/api/common.php`, `gui/api/config.php`, `gui/api/urls.php`, `gui/api/scenarios-status.php`, `gui/api/cleanup.php`, `gui/api/stream/crawl.php`, `gui/api/stream/generate.php`, `gui/api/stream/manage.php`, `gui/api/stream/backstop.php`
+- **Node.js 20 + Chromium in DDEV** — BackstopJS runs entirely inside DDEV, no host installation required
+  - `nodejs_version: "20"` and `webimage_extra_packages: [chromium]` added to `.ddev/config.yaml`
+  - BackstopJS installed automatically on `ddev start` via `post-start` hook
+  - Puppeteer uses system Chromium (`/usr/bin/chromium`) instead of bundled download
+
+### Fixed
 - **Fixed sitemap parser failing with relative URLs in sitemap `<loc>` tags** (`crawler.php`)
   - Some CMS systems (e.g., TYPO3) generate sitemaps with relative URLs like `/sitemap.xml?sitemap=pages&cHash=...` (in sitemap indexes) and `/some-page` (in regular sitemaps) instead of absolute URLs
   - Sitemap index: relative sub-sitemap URLs are now resolved against the base sitemap URL before fetching
   - Regular sitemaps: relative page URLs are now resolved against the domain before normalization
-### Security
 
 ## [1.2.1] - 2025-11-10
 
