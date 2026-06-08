@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+- DDEV post-start hook now installs BackstopJS with `--prefix /usr/local` so the `backstop` binary lands in `/usr/local/bin` and is reliably available in PATH on all machines
 ### Security
 
 ## [1.3.0] - 2026-03-04
