@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 ### Removed
 ### Fixed
+- DDEV post-start hook no longer installs BackstopJS with `--prefix /usr/local`, since the container's non-root user has no write permission there and the install silently failed (`sh: 1: backstop: not found` in the GUI). Installing with the default npm prefix (`/usr/local/n`, already group-writable and on PATH) works reliably again.
 ### Security
 
 ## [1.3.1] - 2026-06-08
