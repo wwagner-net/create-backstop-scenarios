@@ -396,25 +396,35 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
         <label for="mode-sitemap">Sitemap (empfohlen)</label>
         <input type="radio" id="mode-crawl" name="crawl-mode" value="crawl">
         <label for="mode-crawl">Website crawlen</label>
+        <input type="radio" id="mode-manual" name="crawl-mode" value="manual">
+        <label for="mode-manual">Eigene URL-Liste</label>
       </div>
     </div>
 
-    <div class="form-row">
-      <label id="url-label">Sitemap-URL</label>
-      <input type="url" id="crawl-url" placeholder="https://www.example.com/sitemap.xml">
-    </div>
-
-    <div class="form-row-inline">
+    <div id="crawl-auto-fields">
       <div class="form-row">
-        <label>Max. Anzahl URLs</label>
-        <input type="number" id="crawl-maxUrls" value="10000" min="1" max="100000">
+        <label id="url-label">Sitemap-URL</label>
+        <input type="url" id="crawl-url" placeholder="https://www.example.com/sitemap.xml">
       </div>
-      <div class="form-row" style="display:flex;align-items:flex-end;padding-bottom:4px;">
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:0;">
-          <input type="checkbox" id="crawl-includeParams">
-          Query-Parameter einschliessen
-        </label>
+
+      <div class="form-row-inline">
+        <div class="form-row">
+          <label>Max. Anzahl URLs</label>
+          <input type="number" id="crawl-maxUrls" value="10000" min="1" max="100000">
+        </div>
+        <div class="form-row" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:0;">
+            <input type="checkbox" id="crawl-includeParams">
+            Query-Parameter einschliessen
+          </label>
+        </div>
       </div>
+    </div>
+
+    <div class="form-row" id="crawl-manual-fields" style="display:none">
+      <label>URLs (eine pro Zeile)</label>
+      <textarea id="manual-urls" rows="10" placeholder="https://www.example.com/seite-1&#10;https://www.example.com/seite-2"></textarea>
+      <small style="color:var(--muted);margin-top:4px;display:block">Leerzeilen und führende/nachfolgende Leerzeichen werden ignoriert.</small>
     </div>
 
     <div id="crawl-alert"></div>
@@ -779,17 +789,28 @@ async function saveConfig() {
 // ═══════════════════════════════════════════════════ STEP 2: CRAWL
 function updateCrawlModeLabel() {
   const mode = document.querySelector('input[name="crawl-mode"]:checked').value;
-  document.getElementById('url-label').textContent =
-    mode === 'sitemap' ? 'Sitemap-URL' : 'Website-URL (Startseite)';
-  document.getElementById('crawl-url').placeholder =
-    mode === 'sitemap' ? 'https://www.example.com/sitemap.xml' : 'https://www.example.com';
+  document.getElementById('crawl-auto-fields').style.display = mode === 'manual' ? 'none' : '';
+  document.getElementById('crawl-manual-fields').style.display = mode === 'manual' ? '' : 'none';
+  document.getElementById('btn-crawl').textContent = mode === 'manual' ? 'URLs übernehmen' : 'URLs sammeln';
+  if (mode !== 'manual') {
+    document.getElementById('url-label').textContent =
+      mode === 'sitemap' ? 'Sitemap-URL' : 'Website-URL (Startseite)';
+    document.getElementById('crawl-url').placeholder =
+      mode === 'sitemap' ? 'https://www.example.com/sitemap.xml' : 'https://www.example.com';
+  }
 }
 
 function startCrawl() {
   if (crawling) return;
   clearAlert('crawl-alert');
   const mode = document.querySelector('input[name="crawl-mode"]:checked').value;
-  const url  = document.getElementById('crawl-url').value.trim();
+
+  if (mode === 'manual') {
+    saveManualUrls();
+    return;
+  }
+
+  const url = document.getElementById('crawl-url').value.trim();
 
   if (!url) { showAlert('crawl-alert', 'Bitte eine URL eingeben.'); return; }
   if (!/^https?:\/\//i.test(url)) { showAlert('crawl-alert', 'URL muss mit http:// oder https:// beginnen.'); return; }
@@ -817,6 +838,40 @@ function startCrawl() {
       showAlert('crawl-alert', 'Fehler beim Sammeln der URLs. Bitte Ausgabe prüfen.', 'error');
     }
   });
+}
+
+async function saveManualUrls() {
+  const raw = document.getElementById('manual-urls').value;
+  const urls = raw.split('\n').map(u => u.trim()).filter(u => u !== '');
+
+  if (urls.length === 0) { showAlert('crawl-alert', 'Bitte mindestens eine URL eingeben.'); return; }
+  const invalid = urls.find(u => !/^https?:\/\//i.test(u));
+  if (invalid) { showAlert('crawl-alert', `Ungültige URL (muss mit http:// oder https:// beginnen): ${invalid}`); return; }
+
+  const btn = document.getElementById('btn-crawl');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Läuft...';
+
+  try {
+    const res = await fetch('/gui/api/urls.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ urls }),
+    });
+    const json = await res.json();
+    btn.disabled = false;
+    btn.innerHTML = 'URLs übernehmen';
+    if (json.success) {
+      showAlert('crawl-alert', `✓ ${json.count} URL(s) übernommen.`, 'success');
+      markDone(2);
+    } else {
+      showAlert('crawl-alert', json.error || 'Fehler beim Speichern der URLs.');
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'URLs übernehmen';
+    showAlert('crawl-alert', 'Netzwerkfehler: ' + e.message);
+  }
 }
 
 // ═══════════════════════════════════════════════════ STEP 3: URLS
