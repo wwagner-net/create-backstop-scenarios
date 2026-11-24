@@ -32,38 +32,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $raw = file_get_contents($configPath);
         $data = json_decode($raw, true);
         if ($data === null) {
-            jsonResponse(['error' => 'config.json ist ungültig'], 500);
+            jsonResponse(['error' => apiT('api.error.config_invalid')], 500);
         }
-        // Remove _comments key if present
         unset($data['_comments']);
-        jsonResponse(['config' => $data, 'exists' => true]);
+        jsonResponse(['config' => $data, 'exists' => true, 'locale' => I18n::getLocale()]);
     } else {
-        jsonResponse(['config' => $defaultConfig, 'exists' => false]);
+        jsonResponse(['config' => $defaultConfig, 'exists' => false, 'locale' => I18n::getLocale()]);
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = json_decode(file_get_contents('php://input'), true);
+    bootstrapApiLocale(is_array($body) ? $body : null);
     if ($body === null) {
-        jsonResponse(['error' => 'Ungültige JSON-Daten'], 400);
+        jsonResponse(['error' => apiT('api.error.invalid_json')], 400);
     }
 
     $config = $body['config'] ?? null;
     if (!$config) {
-        jsonResponse(['error' => 'Kein config-Objekt vorhanden'], 400);
+        jsonResponse(['error' => apiT('api.error.config_missing')], 400);
     }
 
-    // Basic validation
     if (empty($config['projectId'])) {
-        jsonResponse(['error' => 'Projekt-ID fehlt'], 400);
+        jsonResponse(['error' => apiT('api.error.project_id_missing')], 400);
+    }
+
+    if (isset($config['locale'])) {
+        $norm = I18n::normalize((string)$config['locale']);
+        if ($norm === null) {
+            unset($config['locale']);
+        } else {
+            $config['locale'] = $norm;
+            I18n::setLocale($norm);
+        }
     }
 
     $json = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     if (file_put_contents($configPath, $json) === false) {
-        jsonResponse(['error' => 'Datei konnte nicht gespeichert werden'], 500);
+        jsonResponse(['error' => apiT('api.error.save_failed')], 500);
     }
 
-    jsonResponse(['success' => true]);
+    jsonResponse(['success' => true, 'locale' => I18n::getLocale()]);
 }
 
-jsonResponse(['error' => 'Methode nicht erlaubt'], 405);
+jsonResponse(['error' => apiT('api.error.method_not_allowed')], 405);

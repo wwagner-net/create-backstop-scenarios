@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- English + German i18n for GUI, API user messages, CLI help/status, and docs
+  - Catalogs: `lang/en.json`, `lang/de.json`
+  - Helper: `src/I18n.php` (override → `config.json` `locale` → Accept-Language / `$LANG` → `en`)
+  - GUI header toggle **EN | DE** (persists `locale`)
+  - CLI `--lang=en|de` one-shot override
+  - `README.de.md` and Language section in `README.md`
+  - Self-check: `ddev exec php scripts/i18n-selfcheck.php`
+- Optional `locale` field documented in `config.example.json`
+
 ### Changed
 ### Deprecated
 ### Removed

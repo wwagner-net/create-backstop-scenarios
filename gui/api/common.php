@@ -1,6 +1,28 @@
 <?php
 define('BASE_DIR', '/var/www/html');
 
+require_once BASE_DIR . '/src/I18n.php';
+
+/**
+ * Resolve locale for this API request: ?lang → JSON body lang → config → Accept-Language → en
+ */
+function bootstrapApiLocale(?array $body = null): string
+{
+    $override = $_GET['lang'] ?? null;
+    if ($override === null && is_array($body) && isset($body['lang'])) {
+        $override = $body['lang'];
+    }
+    return I18n::resolve($override !== null ? (string)$override : null, true, false);
+}
+
+function apiT(string $key, array $vars = []): string
+{
+    return I18n::t($key, $vars);
+}
+
+// Default bootstrap for includes that don't parse a body first
+bootstrapApiLocale();
+
 function jsonResponse(array $data, int $status = 200): void {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
@@ -29,11 +51,6 @@ function stripAnsi(string $text): string {
     return preg_replace('/\033\[[0-9;]*m/', '', $text);
 }
 
-/**
- * Run a shell command and stream output as SSE events.
- * stderr is merged into stdout via '2>&1'.
- * Optionally writes $stdin to the process stdin before reading.
- */
 function getNpmGlobalBin(): string {
     $prefix = trim((string)shell_exec('npm prefix -g 2>/dev/null'));
     return $prefix ? $prefix . '/bin' : '';
@@ -61,7 +78,7 @@ function runCommandSSE(string $cmd, ?string $stdin = null): void {
     $proc = proc_open(['sh', '-c', $cmd . ' 2>&1'], $descriptors, $pipes, BASE_DIR, $env);
 
     if (!is_resource($proc)) {
-        sendSSEEvent(['line' => 'Fehler: Befehl konnte nicht gestartet werden.']);
+        sendSSEEvent(['line' => apiT('api.error.command_start_failed')]);
         sendSSEEvent(['done' => true, 'exit' => 1]);
         return;
     }

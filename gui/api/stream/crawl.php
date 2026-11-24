@@ -6,13 +6,13 @@ $url  = $_GET['url'] ?? '';
 
 if (!in_array($mode, ['sitemap', 'crawl'], true) || empty($url)) {
     http_response_code(400);
-    echo 'data: ' . json_encode(['error' => 'Ungültige Parameter']) . "\n\n";
+    echo 'data: ' . json_encode(['error' => apiT('api.error.invalid_params')]) . "\n\n";
     exit;
 }
 
 if (!preg_match('#^https?://#i', $url)) {
     http_response_code(400);
-    echo 'data: ' . json_encode(['error' => 'URL muss mit http:// oder https:// beginnen']) . "\n\n";
+    echo 'data: ' . json_encode(['error' => apiT('api.error.url_scheme')]) . "\n\n";
     exit;
 }
 
