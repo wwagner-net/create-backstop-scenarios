@@ -7,13 +7,13 @@ $urlsFile  = $_GET['urls'] ?? '';
 
 if (empty($test) || empty($reference)) {
     http_response_code(400);
-    echo 'data: ' . json_encode(['error' => 'Test- und Referenz-Domain sind erforderlich']) . "\n\n";
+    echo 'data: ' . json_encode(['error' => apiT('api.error.domains_required')]) . "\n\n";
     exit;
 }
 
 if (!preg_match('#^https?://#i', $test) || !preg_match('#^https?://#i', $reference)) {
     http_response_code(400);
-    echo 'data: ' . json_encode(['error' => 'URLs müssen mit http:// oder https:// beginnen']) . "\n\n";
+    echo 'data: ' . json_encode(['error' => apiT('api.error.url_scheme')]) . "\n\n";
     exit;
 }
 

@@ -2,7 +2,22 @@
 
 **Version 1.4.0**
 
+[Deutsch](README.de.md)
+
 Automated visual regression testing tool that crawls websites, generates test scenarios, and manages them efficiently in batches.
+
+## Language (EN / DE)
+
+The GUI, API messages, and CLI help support **English** and **German**.
+
+| How | Behaviour |
+|-----|-----------|
+| Auto-detect | Browser `Accept-Language` (GUI/API) or `$LANG` / `$LC_ALL` (CLI) |
+| GUI toggle | **EN \| DE** in the header — writes `"locale"` into `config.json` |
+| Config | Optional `"locale": "en"` or `"de"` in `config.json` (shared by GUI + CLI) |
+| CLI override | `--lang=en` or `--lang=de` for one run (does not write config) |
+
+Fallback if nothing matches: **en**.
 
 ## What Does This Tool Do?
 
@@ -81,11 +96,13 @@ The GUI walks you through the complete workflow in 5 steps:
 
 | Step | What happens |
 |------|-------------|
-| 1. Konfiguration | Set project ID, selectors, delay, viewports → saves `config.json` |
-| 2. URLs sammeln | Enter sitemap URL or crawl URL → streams live output |
-| 3. URLs prüfen | Review, filter and edit the collected URLs |
-| 4. Szenarien | Enter test + reference domain → generates scenario files |
+| 1. Configuration | Set project ID, selectors, delay, viewports → saves `config.json` |
+| 2. Collect URLs | Enter sitemap URL or crawl URL → streams live output |
+| 3. Review URLs | Review, filter and edit the collected URLs |
+| 4. Scenarios | Enter test + reference domain → generates scenario files |
 | 5. Tests | Take reference screenshots, run tests, view report |
+
+Use the **EN \| DE** control in the GUI header to switch language at any time.
 
 ---
 

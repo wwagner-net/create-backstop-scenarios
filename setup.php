@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/src/cli_bootstrap.php';
+cliBootstrap($argv);
+
 /**
  * Interactive Setup Wizard for BackstopJS Scenario Generator
  *
@@ -29,7 +32,7 @@ function printHeader() {
     echo "\n";
     echo color("╔════════════════════════════════════════════════════════════════╗", 'cyan') . "\n";
     echo color("║                                                                ║", 'cyan') . "\n";
-    echo color("║          BackstopJS Scenario Generator Setup Wizard           ║", 'cyan') . "\n";
+    echo color("║          " . str_pad(cliT('cli.setup.title'), 58) . "║", 'cyan') . "\n";
     echo color("║                                                                ║", 'cyan') . "\n";
     echo color("╚════════════════════════════════════════════════════════════════╝", 'cyan') . "\n";
     echo "\n";

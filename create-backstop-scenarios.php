@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/src/cli_bootstrap.php';
+cliBootstrap($argv);
+
 /**
  * Load chunk size from config.json
  */
@@ -50,13 +53,14 @@ function getArguments() {
  * Show help message
  */
 function showHelp() {
-    echo "BackstopJS Scenario Generator\n\n";
-    echo "Usage: ddev exec php create-backstop-scenarios.php [options]\n\n";
+    echo cliT('cli.create.title') . "\n\n";
+    echo cliT('cli.create.usage') . "\n\n";
     echo "Options:\n";
-    echo "  --urls=FILE             Path to file with URLs (default: crawled_urls.txt)\n";
-    echo "  --test=URL              Test domain URL (required)\n";
-    echo "  --reference=URL         Reference domain URL (required)\n";
-    echo "  --help                  Show this help message\n\n";
+    echo cliT('cli.create.opt_urls') . "\n";
+    echo cliT('cli.create.opt_test') . "\n";
+    echo cliT('cli.create.opt_reference') . "\n";
+    echo "  --help                  Show this help message\n";
+    echo cliT('cli.lang.option') . "\n\n";
     echo "Example:\n";
     echo "  ddev exec php create-backstop-scenarios.php \\\n";
     echo "    --test=https://example.ddev.site \\\n";
@@ -71,7 +75,7 @@ $urlsFile = $options['urls'] ?? 'crawled_urls.txt';
 
 // Get domains from arguments
 if (!isset($options['test']) || !isset($options['reference'])) {
-    echo "Error: Both --test and --reference domains are required.\n\n";
+    echo cliT('cli.create.need_domains') . "\n\n";
     showHelp();
     exit(1);
 }
@@ -81,12 +85,12 @@ $referenceDomain = rtrim($options['reference'], '/');
 
 // Validate URLs
 if (!filter_var($testDomain, FILTER_VALIDATE_URL)) {
-    echo "Error: Invalid test domain URL: $testDomain\n";
+    echo cliT('cli.create.invalid_test', ['url' => $testDomain]) . "\n";
     exit(1);
 }
 
 if (!filter_var($referenceDomain, FILTER_VALIDATE_URL)) {
-    echo "Error: Invalid reference domain URL: $referenceDomain\n";
+    echo cliT('cli.create.invalid_reference', ['url' => $referenceDomain]) . "\n";
     exit(1);
 }
 
@@ -99,7 +103,7 @@ $urls = [];
 // Get chunk size from config.json (default: 40)
 $chunkSize = getChunkSize();
 
-echo "Configuration:\n";
+echo cliT('cli.create.config_header') . "\n";
 echo "  URLs File:        $urlsFile\n";
 echo "  Test Domain:      $testDomain\n";
 echo "  Reference Domain: $referenceDomain\n";
@@ -119,7 +123,7 @@ if (!file_exists('scenarios/done')) {
 
 // Check if URLs file exists
 if (!file_exists($urlsFile)) {
-    echo "Error: URLs file not found: $urlsFile\n";
+    echo cliT('cli.create.urls_missing', ['file' => $urlsFile]) . "\n";
     echo "Please run the crawler first:\n";
     echo "  ddev exec php crawler.php --url $referenceDomain\n";
     exit(1);
@@ -129,7 +133,7 @@ if (!file_exists($urlsFile)) {
 $urls = file($urlsFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 
 if (empty($urls)) {
-    echo "Error: No URLs found in file: $urlsFile\n";
+    echo cliT('cli.create.urls_empty', ['file' => $urlsFile]) . "\n";
     exit(1);
 }
 
@@ -158,10 +162,10 @@ foreach ($chunks as $index => $chunk) {
     file_put_contents($filename, $fileContent);
 }
 
-echo "JavaScript files have been successfully created in scenarios/pending/.\n";
-echo "Total files created: " . count($chunks) . "\n";
-echo "\nNext steps:\n";
-echo "  1. Run: ddev exec php manage-scenarios.php next\n";
-echo "  2. Run: backstop reference --config ./backstop.js\n";
-echo "  3. Run: backstop test --config ./backstop.js\n";
+echo cliT('cli.create.done') . "\n";
+echo cliT('cli.create.total_files', ['count' => count($chunks)]) . "\n";
+echo "\n" . cliT('cli.create.next') . "\n";
+echo cliT('cli.create.next1') . "\n";
+echo cliT('cli.create.next2') . "\n";
+echo cliT('cli.create.next3') . "\n";
 

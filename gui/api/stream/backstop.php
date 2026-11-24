@@ -6,7 +6,7 @@ $action  = $_GET['action'] ?? '';
 
 if (!in_array($action, $allowed, true)) {
     http_response_code(400);
-    echo 'data: ' . json_encode(['error' => 'Ungültige Aktion (reference oder test)']) . "\n\n";
+    echo 'data: ' . json_encode(['error' => apiT('api.error.invalid_action_backstop')]) . "\n\n";
     exit;
 }
 

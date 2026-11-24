@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/src/cli_bootstrap.php';
+cliBootstrap($argv);
 /**
  * Manage BackstopJS scenario files
  *
@@ -20,7 +22,14 @@ foreach ([$pendingDir, $activeDir, $doneDir] as $dir) {
 }
 
 // Get command from arguments
-$command = $argv[1] ?? 'status';
+$command = 'status';
+foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--lang=')) {
+        continue;
+    }
+    $command = $arg;
+    break;
+}
 
 switch ($command) {
     case 'next':
@@ -166,11 +175,11 @@ function showStatus() {
     $activeFiles = glob("$activeDir/scenarioUrls_*.js");
     $doneFiles = glob("$doneDir/scenarioUrls_*.js");
 
-    echo "=== Scenario Status ===\n\n";
+    echo cliT('cli.manage.status_title') . "\n\n";
 
-    echo "Pending: " . count($pendingFiles) . " file(s)\n";
-    echo "Active:  " . count($activeFiles) . " file(s)\n";
-    echo "Done:    " . count($doneFiles) . " file(s)\n\n";
+    echo cliT('cli.manage.pending', ['count' => count($pendingFiles)]) . "\n";
+    echo cliT('cli.manage.active', ['count' => count($activeFiles)]) . "\n";
+    echo cliT('cli.manage.done', ['count' => count($doneFiles)]) . "\n\n";
 
     if (!empty($activeFiles)) {
         echo "Currently active:\n";
@@ -357,17 +366,18 @@ function countUrlsInFile($filepath) {
  * Show help
  */
 function showHelp() {
-    echo "BackstopJS Scenario Manager\n\n";
-    echo "Usage: ddev exec php manage-scenarios.php [command]\n\n";
-    echo "Commands:\n";
-    echo "  next      Move the next pending scenario to active\n";
-    echo "  done      Mark active scenario as done and move to next\n";
-    echo "  skip      Skip active scenario (move back to pending) and move to next\n";
-    echo "  status    Show current status (default)\n";
-    echo "  list      List all scenarios with details\n";
-    echo "  reset     Move all scenarios back to pending\n";
-    echo "  auto      Start automatic workflow mode (process all scenarios)\n";
-    echo "  help      Show this help message\n\n";
+    echo cliT('cli.manage.title') . "\n\n";
+    echo cliT('cli.manage.usage') . "\n\n";
+    echo cliT('cli.manage.commands') . "\n";
+    echo cliT('cli.manage.cmd_next') . "\n";
+    echo cliT('cli.manage.cmd_done') . "\n";
+    echo cliT('cli.manage.cmd_skip') . "\n";
+    echo cliT('cli.manage.cmd_status') . "\n";
+    echo cliT('cli.manage.cmd_list') . "\n";
+    echo cliT('cli.manage.cmd_reset') . "\n";
+    echo cliT('cli.manage.cmd_auto') . "\n";
+    echo cliT('cli.manage.cmd_help') . "\n";
+    echo cliT('cli.lang.option') . "\n\n";
     echo "Typical workflow:\n";
     echo "  1. ddev exec php create-backstop-scenarios.php\n";
     echo "  2. ddev exec php manage-scenarios.php next\n";

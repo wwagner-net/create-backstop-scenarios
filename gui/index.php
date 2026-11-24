@@ -1,5 +1,13 @@
+<?php
+require_once dirname(__DIR__) . '/src/I18n.php';
+if (!defined('BASE_DIR')) {
+    define('BASE_DIR', dirname(__DIR__));
+}
+$guiLocale = I18n::resolve(null, true, false);
+$i18nCatalogs = I18n::allCatalogs();
+?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="<?= htmlspecialchars($guiLocale, ENT_QUOTES, 'UTF-8') ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,6 +46,23 @@ header {
 }
 header h1 { font-size: 1.2rem; font-weight: 700; }
 header span { font-size: 0.85rem; color: var(--muted); }
+header .spacer { flex: 1; }
+.lang-toggle { display: flex; gap: 4px; margin-left: auto; }
+.lang-toggle button {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lang-toggle button.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
 
 /* Stepper */
 .stepper {
@@ -289,29 +314,33 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
     <rect x="15" y="15" width="7" height="7" rx="1" fill="white"/>
   </svg>
   <h1>BackstopJS Generator</h1>
-  <span>Visual Regression Testing</span>
+  <span data-i18n="gui.header.subtitle">Visual Regression Testing</span>
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button type="button" id="lang-en" data-i18n="gui.lang.en" onclick="switchLocale('en')">EN</button>
+    <button type="button" id="lang-de" data-i18n="gui.lang.de" onclick="switchLocale('de')">DE</button>
+  </div>
 </header>
 
 <div class="stepper" id="stepper">
   <div class="step-item active" data-step="1" onclick="goToStep(1)">
     <div class="step-num">1</div>
-    <span class="step-label">Konfiguration</span>
+    <span class="step-label" data-i18n="gui.step.config">Konfiguration</span>
   </div>
   <div class="step-item" data-step="2" onclick="goToStep(2)">
     <div class="step-num">2</div>
-    <span class="step-label">URLs sammeln</span>
+    <span class="step-label" data-i18n="gui.step.urls_collect">URLs sammeln</span>
   </div>
   <div class="step-item" data-step="3" onclick="goToStep(3)">
     <div class="step-num">3</div>
-    <span class="step-label">URLs prüfen</span>
+    <span class="step-label" data-i18n="gui.step.urls_review">URLs prüfen</span>
   </div>
   <div class="step-item" data-step="4" onclick="goToStep(4)">
     <div class="step-num">4</div>
-    <span class="step-label">Szenarien</span>
+    <span class="step-label" data-i18n="gui.step.scenarios">Szenarien</span>
   </div>
   <div class="step-item" data-step="5" onclick="goToStep(5)">
     <div class="step-num">5</div>
-    <span class="step-label">Tests</span>
+    <span class="step-label" data-i18n="gui.step.tests">Tests</span>
   </div>
 </div>
 
@@ -320,65 +349,65 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
 <!-- ═══════════════════════════════════════════════════════ STEP 1 -->
 <div class="panel active" id="panel-1">
   <div class="card">
-    <h2>Konfiguration</h2>
-    <p class="subtitle">Projekteinstellungen festlegen. Werden in <code>config.json</code> gespeichert.</p>
+    <h2 data-i18n="gui.config.title">Konfiguration</h2>
+    <p class="subtitle" data-i18n="gui.config.subtitle">Projekteinstellungen festlegen. Werden in config.json gespeichert.</p>
 
     <div class="form-row-inline">
       <div class="form-row">
-        <label>Projekt-ID</label>
-        <input type="text" id="cfg-projectId" placeholder="mein-projekt">
-        <small>Eindeutiger Bezeichner (keine Leerzeichen)</small>
+        <label data-i18n="gui.config.project_id">Projekt-ID</label>
+        <input type="text" id="cfg-projectId" data-i18n-placeholder="gui.config.project_id_ph" placeholder="mein-projekt">
+        <small data-i18n="gui.config.project_id_hint">Eindeutiger Bezeichner (keine Leerzeichen)</small>
       </div>
       <div class="form-row">
-        <label>Chunk-Grösse (URLs pro Datei)</label>
+        <label data-i18n="gui.config.chunk_size">Chunk-Grösse (URLs pro Datei)</label>
         <input type="number" id="cfg-chunkSize" value="40" min="1" max="500">
-        <small>Standard: 40. Weniger = stabiler, mehr = schneller</small>
+        <small data-i18n="gui.config.chunk_hint">Standard: 40. Weniger = stabiler, mehr = schneller</small>
       </div>
     </div>
 
     <div class="form-row">
-      <label>Remove-Selektoren <small style="display:inline;font-weight:400">(werden komplett entfernt, z.B. Cookie-Banner)</small></label>
+      <label><span data-i18n="gui.config.remove_selectors">Remove-Selektoren</span> <small style="display:inline;font-weight:400" data-i18n="gui.config.remove_selectors_hint">(werden komplett entfernt, z.B. Cookie-Banner)</small></label>
       <textarea id="cfg-removeSelectors" rows="3" placeholder="#CybotCookiebotDialog&#10;.cookie-banner&#10;#chat-widget"></textarea>
-      <small>Ein CSS-Selektor pro Zeile</small>
+      <small data-i18n="gui.config.selector_per_line">Ein CSS-Selektor pro Zeile</small>
     </div>
 
     <div class="form-row">
-      <label>Hide-Selektoren <small style="display:inline;font-weight:400">(versteckt, z.B. Timestamps)</small></label>
+      <label><span data-i18n="gui.config.hide_selectors">Hide-Selektoren</span> <small style="display:inline;font-weight:400" data-i18n="gui.config.hide_selectors_hint">(versteckt, z.B. Timestamps)</small></label>
       <textarea id="cfg-hideSelectors" rows="2" placeholder=".timestamp&#10;.view-counter"></textarea>
-      <small>Ein CSS-Selektor pro Zeile</small>
+      <small data-i18n="gui.config.selector_per_line">Ein CSS-Selektor pro Zeile</small>
     </div>
 
     <div class="form-row-inline">
       <div class="form-row">
-        <label>Delay vor Screenshot (ms)</label>
+        <label data-i18n="gui.config.delay">Delay vor Screenshot (ms)</label>
         <input type="number" id="cfg-delay" value="5000" min="0" max="30000" step="500">
-        <small>Standard: 5000ms (5 Sekunden)</small>
+        <small data-i18n="gui.config.delay_hint">Standard: 5000ms (5 Sekunden)</small>
       </div>
       <div class="form-row">
-        <label>Mismatch-Schwelle (%)</label>
+        <label data-i18n="gui.config.mismatch">Mismatch-Schwelle (%)</label>
         <input type="number" id="cfg-misMatch" value="10" min="0" max="100" step="0.5">
-        <small>Akzeptable Abweichung. Standard: 10%</small>
+        <small data-i18n="gui.config.mismatch_hint">Akzeptable Abweichung. Standard: 10%</small>
       </div>
     </div>
 
     <div class="form-row">
-      <label>Viewports</label>
+      <label data-i18n="gui.config.viewports">Viewports</label>
       <table class="vp-table">
         <thead>
           <tr>
-            <th>Name</th><th>Breite (px)</th><th>Höhe (px)</th><th></th>
+            <th data-i18n="gui.config.vp_name">Name</th><th data-i18n="gui.config.vp_width">Breite (px)</th><th data-i18n="gui.config.vp_height">Höhe (px)</th><th></th>
           </tr>
         </thead>
         <tbody id="vp-tbody"></tbody>
       </table>
-      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addViewport()">+ Viewport hinzufügen</button>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addViewport()" data-i18n="gui.config.add_viewport">+ Viewport hinzufügen</button>
     </div>
 
     <div id="cfg-alert"></div>
     <div class="btn-row">
-      <button class="btn btn-primary" onclick="saveConfig()">Konfiguration speichern</button>
+      <button class="btn btn-primary" onclick="saveConfig()" data-i18n="gui.config.save">Konfiguration speichern</button>
       <div class="spacer"></div>
-      <button class="btn btn-outline" onclick="goToStep(2)">Weiter →</button>
+      <button class="btn btn-outline" onclick="goToStep(2)" data-i18n="gui.nav.next">Weiter →</button>
     </div>
   </div>
 </div>
@@ -386,53 +415,53 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
 <!-- ═══════════════════════════════════════════════════════ STEP 2 -->
 <div class="panel" id="panel-2">
   <div class="card">
-    <h2>URLs sammeln</h2>
-    <p class="subtitle">URLs von der Referenz-Website sammeln (Sitemap oder Crawlen).</p>
+    <h2 data-i18n="gui.crawl.title">URLs sammeln</h2>
+    <p class="subtitle" data-i18n="gui.crawl.subtitle">URLs von der Referenz-Website sammeln (Sitemap oder Crawlen).</p>
 
     <div class="form-row">
-      <label>Modus</label>
+      <label data-i18n="gui.crawl.mode">Modus</label>
       <div class="radio-group">
         <input type="radio" id="mode-sitemap" name="crawl-mode" value="sitemap" checked>
-        <label for="mode-sitemap">Sitemap (empfohlen)</label>
+        <label for="mode-sitemap" data-i18n="gui.crawl.mode_sitemap">Sitemap (empfohlen)</label>
         <input type="radio" id="mode-crawl" name="crawl-mode" value="crawl">
-        <label for="mode-crawl">Website crawlen</label>
+        <label for="mode-crawl" data-i18n="gui.crawl.mode_crawl">Website crawlen</label>
         <input type="radio" id="mode-manual" name="crawl-mode" value="manual">
-        <label for="mode-manual">Eigene URL-Liste</label>
+        <label for="mode-manual" data-i18n="gui.crawl.mode_manual">Eigene URL-Liste</label>
       </div>
     </div>
 
     <div id="crawl-auto-fields">
       <div class="form-row">
-        <label id="url-label">Sitemap-URL</label>
+        <label id="url-label" data-i18n="gui.crawl.url_sitemap">Sitemap-URL</label>
         <input type="url" id="crawl-url" placeholder="https://www.example.com/sitemap.xml">
       </div>
 
       <div class="form-row-inline">
         <div class="form-row">
-          <label>Max. Anzahl URLs</label>
+          <label data-i18n="gui.crawl.max_urls">Max. Anzahl URLs</label>
           <input type="number" id="crawl-maxUrls" value="10000" min="1" max="100000">
         </div>
         <div class="form-row" style="display:flex;align-items:flex-end;padding-bottom:4px;">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-bottom:0;">
             <input type="checkbox" id="crawl-includeParams">
-            Query-Parameter einschliessen
+            <span data-i18n="gui.crawl.include_params">Query-Parameter einschliessen</span>
           </label>
         </div>
       </div>
     </div>
 
     <div class="form-row" id="crawl-manual-fields" style="display:none">
-      <label>URLs (eine pro Zeile)</label>
+      <label data-i18n="gui.crawl.manual_label">URLs (eine pro Zeile)</label>
       <textarea id="manual-urls" rows="10" placeholder="https://www.example.com/seite-1&#10;https://www.example.com/seite-2"></textarea>
-      <small style="color:var(--muted);margin-top:4px;display:block">Leerzeilen und führende/nachfolgende Leerzeichen werden ignoriert.</small>
+      <small style="color:var(--muted);margin-top:4px;display:block" data-i18n="gui.crawl.manual_hint">Leerzeilen und führende/nachfolgende Leerzeichen werden ignoriert.</small>
     </div>
 
     <div id="crawl-alert"></div>
     <div class="btn-row">
-      <button class="btn btn-outline" onclick="goToStep(1)">← Zurück</button>
-      <button class="btn btn-primary" id="btn-crawl" onclick="startCrawl()">URLs sammeln</button>
+      <button class="btn btn-outline" onclick="goToStep(1)" data-i18n="gui.nav.back">← Zurück</button>
+      <button class="btn btn-primary" id="btn-crawl" onclick="startCrawl()" data-i18n="gui.crawl.collect">URLs sammeln</button>
       <div class="spacer"></div>
-      <button class="btn btn-outline" id="btn-crawl-next" onclick="goToStep(3)">Weiter →</button>
+      <button class="btn btn-outline" id="btn-crawl-next" onclick="goToStep(3)" data-i18n="gui.nav.next">Weiter →</button>
     </div>
     <div class="terminal" id="crawl-output"></div>
   </div>
@@ -441,23 +470,23 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
 <!-- ═══════════════════════════════════════════════════════ STEP 3 -->
 <div class="panel" id="panel-3">
   <div class="card">
-    <h2>URLs prüfen &amp; bearbeiten</h2>
-    <p class="subtitle">Überprüfe die gesammelten URLs und entferne unerwünschte Einträge.</p>
+    <h2 data-i18n="gui.urls.title">URLs prüfen &amp; bearbeiten</h2>
+    <p class="subtitle" data-i18n="gui.urls.subtitle">Überprüfe die gesammelten URLs und entferne unerwünschte Einträge.</p>
 
     <div class="filter-row">
-      <input type="text" id="url-filter" placeholder="Filter..." oninput="filterUrls()">
-      <button class="btn btn-outline btn-sm" onclick="loadUrls()">🔄 Neu laden</button>
+      <input type="text" id="url-filter" data-i18n-placeholder="gui.urls.filter_ph" placeholder="Filter..." oninput="filterUrls()">
+      <button class="btn btn-outline btn-sm" onclick="loadUrls()" data-i18n="gui.urls.reload">🔄 Neu laden</button>
     </div>
-    <div class="url-count" id="url-count">Lade...</div>
-    <textarea id="urlList" placeholder="Keine URLs vorhanden. Bitte erst URLs sammeln."></textarea>
-    <small style="color:var(--muted);margin-top:4px;display:block">Eine URL pro Zeile. Leerzeilen und führende/nachfolgende Leerzeichen werden ignoriert.</small>
+    <div class="url-count" id="url-count" data-i18n="gui.urls.loading">Lade...</div>
+    <textarea id="urlList" data-i18n-placeholder="gui.urls.empty_ph" placeholder="Keine URLs vorhanden. Bitte erst URLs sammeln."></textarea>
+    <small style="color:var(--muted);margin-top:4px;display:block" data-i18n="gui.urls.hint">Eine URL pro Zeile. Leerzeilen und führende/nachfolgende Leerzeichen werden ignoriert.</small>
 
     <div id="urls-alert"></div>
     <div class="btn-row">
-      <button class="btn btn-outline" onclick="goToStep(2)">← Zurück</button>
-      <button class="btn btn-success" onclick="saveUrls()">URLs speichern</button>
+      <button class="btn btn-outline" onclick="goToStep(2)" data-i18n="gui.nav.back">← Zurück</button>
+      <button class="btn btn-success" onclick="saveUrls()" data-i18n="gui.urls.save">URLs speichern</button>
       <div class="spacer"></div>
-      <button class="btn btn-outline" onclick="goToStep(4)">Weiter →</button>
+      <button class="btn btn-outline" onclick="goToStep(4)" data-i18n="gui.nav.next">Weiter →</button>
     </div>
   </div>
 </div>
@@ -465,28 +494,28 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
 <!-- ═══════════════════════════════════════════════════════ STEP 4 -->
 <div class="panel" id="panel-4">
   <div class="card">
-    <h2>Szenarien generieren</h2>
-    <p class="subtitle">Test- und Referenz-Domain angeben, dann Szenario-Dateien erstellen.</p>
+    <h2 data-i18n="gui.gen.title">Szenarien generieren</h2>
+    <p class="subtitle" data-i18n="gui.gen.subtitle">Test- und Referenz-Domain angeben, dann Szenario-Dateien erstellen.</p>
 
-    <div class="alert alert-info">
+    <div class="alert alert-info" data-i18n="gui.gen.info">
       Die <strong>Referenz-Domain</strong> ist deine Live-Website. Die <strong>Test-Domain</strong> ist deine lokale DDEV-Instanz.
     </div>
 
     <div class="form-row">
-      <label>Test-Domain (DDEV)</label>
+      <label data-i18n="gui.gen.test">Test-Domain (DDEV)</label>
       <input type="url" id="gen-test" placeholder="https://example.ddev.site">
     </div>
     <div class="form-row">
-      <label>Referenz-Domain (Produktion)</label>
+      <label data-i18n="gui.gen.reference">Referenz-Domain (Produktion)</label>
       <input type="url" id="gen-reference" placeholder="https://www.example.com">
     </div>
 
     <div id="gen-alert"></div>
     <div class="btn-row">
-      <button class="btn btn-outline" onclick="goToStep(3)">← Zurück</button>
-      <button class="btn btn-primary" id="btn-generate" onclick="generateScenarios()">Szenarien generieren</button>
+      <button class="btn btn-outline" onclick="goToStep(3)" data-i18n="gui.nav.back">← Zurück</button>
+      <button class="btn btn-primary" id="btn-generate" onclick="generateScenarios()" data-i18n="gui.gen.run">Szenarien generieren</button>
       <div class="spacer"></div>
-      <button class="btn btn-outline" id="btn-gen-next" onclick="goToStep(5)">Weiter →</button>
+      <button class="btn btn-outline" id="btn-gen-next" onclick="goToStep(5)" data-i18n="gui.nav.next">Weiter →</button>
     </div>
     <div class="terminal" id="gen-output"></div>
   </div>
@@ -495,21 +524,21 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
 <!-- ═══════════════════════════════════════════════════════ STEP 5 -->
 <div class="panel" id="panel-5">
   <div class="card">
-    <h2>Tests ausführen</h2>
-    <p class="subtitle">Szenarios verwalten und BackstopJS-Tests durchführen.</p>
+    <h2 data-i18n="gui.test.title">Tests ausführen</h2>
+    <p class="subtitle" data-i18n="gui.test.subtitle">Szenarios verwalten und BackstopJS-Tests durchführen.</p>
 
     <div class="status-grid">
       <div class="status-badge pending">
         <div class="num" id="count-pending">–</div>
-        <div class="lbl">Pending</div>
+        <div class="lbl" data-i18n="gui.test.pending">Pending</div>
       </div>
       <div class="status-badge active">
         <div class="num" id="count-active">–</div>
-        <div class="lbl">Aktiv</div>
+        <div class="lbl" data-i18n="gui.test.active">Aktiv</div>
       </div>
       <div class="status-badge done">
         <div class="num" id="count-done">–</div>
-        <div class="lbl">Erledigt</div>
+        <div class="lbl" data-i18n="gui.test.done">Erledigt</div>
       </div>
     </div>
 
@@ -519,12 +548,12 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
     <div id="report-banner" class="report-banner" style="display:none">
       <div class="rb-icon">📊</div>
       <div class="rb-text">
-        <div class="rb-title">Testergebnis liegt vor!</div>
-        <div class="rb-sub">Der Vergleichsbericht wurde automatisch geöffnet.</div>
+        <div class="rb-title" data-i18n="gui.test.report_title">Testergebnis liegt vor!</div>
+        <div class="rb-sub" data-i18n="gui.test.report_sub">Der Vergleichsbericht wurde automatisch geöffnet.</div>
       </div>
       <a id="report-banner-link" href="/backstop_data/html_report/index.html" target="_blank"
-         class="btn btn-success btn-sm">Bericht öffnen</a>
-      <button class="rb-close" onclick="document.getElementById('report-banner').style.display='none'" title="Schliessen">✕</button>
+         class="btn btn-success btn-sm" data-i18n="gui.test.report_open">Bericht öffnen</a>
+      <button class="rb-close" onclick="document.getElementById('report-banner').style.display='none'" title="Schliessen" data-i18n-title="gui.test.close">✕</button>
     </div>
 
     <div id="test-alert"></div>
@@ -533,41 +562,41 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
     <div style="display:flex;flex-direction:column;gap:10px;">
 
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-outline" id="btn-next" onclick="runManage('next')" style="flex:1">
+        <button class="btn btn-outline" id="btn-next" onclick="runManage('next')" style="flex:1" data-i18n="gui.test.next">
           ▶ Nächste Szenarien aktivieren
         </button>
-        <button class="btn btn-outline btn-sm" id="btn-status" onclick="loadStatus()" title="Status aktualisieren">⟳</button>
+        <button class="btn btn-outline btn-sm" id="btn-status" onclick="loadStatus()" title="Status aktualisieren" data-i18n-title="gui.test.refresh">⟳</button>
       </div>
 
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary" id="btn-reference" onclick="runBackstop('reference')" style="flex:1">
+        <button class="btn btn-primary" id="btn-reference" onclick="runBackstop('reference')" style="flex:1" data-i18n="gui.test.reference">
           📷 Referenz-Screenshots erstellen
         </button>
         <button class="btn btn-primary" id="btn-test" onclick="runBackstop('test')" style="flex:1"
-                title="Nur verfügbar wenn Referenz-Screenshots existieren">
+                title="Nur verfügbar wenn Referenz-Screenshots existieren" data-i18n="gui.test.run" data-i18n-title="gui.test.run_title">
           🔍 Tests ausführen
         </button>
       </div>
 
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-success" id="btn-done" onclick="runManage('done')" style="flex:1">
+        <button class="btn btn-success" id="btn-done" onclick="runManage('done')" style="flex:1" data-i18n="gui.test.mark_done">
           ✓ Als erledigt markieren &amp; weiter
         </button>
-        <button class="btn btn-outline" id="btn-skip" onclick="runManage('skip')" style="flex:1">
+        <button class="btn btn-outline" id="btn-skip" onclick="runManage('skip')" style="flex:1" data-i18n="gui.test.skip">
           ⏭ Überspringen
         </button>
       </div>
 
       <div style="display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);padding-top:10px;flex-wrap:wrap;">
-        <button class="btn btn-outline btn-sm" id="btn-reset" onclick="confirmReset()" style="color:var(--red);border-color:var(--red)">
+        <button class="btn btn-outline btn-sm" id="btn-reset" onclick="confirmReset()" style="color:var(--red);border-color:var(--red)" data-i18n="gui.test.reset">
           ↺ Szenarien zurücksetzen
         </button>
-        <button class="btn btn-outline btn-sm" id="btn-cleanup" onclick="confirmCleanup()" style="color:var(--red);border-color:var(--red)">
+        <button class="btn btn-outline btn-sm" id="btn-cleanup" onclick="confirmCleanup()" style="color:var(--red);border-color:var(--red)" data-i18n="gui.test.cleanup">
           🗑 Screenshots &amp; Berichte löschen
         </button>
         <div class="spacer"></div>
         <a id="report-link" href="/backstop_data/html_report/index.html" target="_blank"
-           class="btn btn-outline btn-sm" style="display:none">
+           class="btn btn-outline btn-sm" style="display:none" data-i18n="gui.test.last_report">
           📊 Letzten Testergebnis-Bericht öffnen
         </a>
       </div>
@@ -577,14 +606,70 @@ input[type=checkbox] { width: auto; margin-right: 6px; }
   </div>
 
   <div style="text-align:center;padding:8px 0;color:var(--muted);font-size:0.8rem;">
-    <button class="btn btn-outline" onclick="goToStep(4)">← Zurück</button>
+    <button class="btn btn-outline" onclick="goToStep(4)" data-i18n="gui.nav.back">← Zurück</button>
   </div>
 </div>
 
 </main>
 
+
 <script>
+// ═══════════════════════════════════════════════════ I18N
+const I18N_CATALOGS = <?= json_encode($i18nCatalogs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+let currentLocale = <?= json_encode($guiLocale, JSON_UNESCAPED_UNICODE) ?>;
+
+function t(key, vars = {}) {
+  const cat = I18N_CATALOGS[currentLocale] || {};
+  let text = cat[key];
+  if (text == null) text = (I18N_CATALOGS.en || {})[key];
+  if (text == null) text = key;
+  Object.keys(vars).forEach(k => {
+    text = String(text).split('{' + k + '}').join(String(vars[k]));
+  });
+  return text;
+}
+
+function applyI18n(root = document) {
+  root.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+  root.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
+  });
+  document.documentElement.lang = currentLocale;
+  const enBtn = document.getElementById('lang-en');
+  const deBtn = document.getElementById('lang-de');
+  if (enBtn) enBtn.classList.toggle('active', currentLocale === 'en');
+  if (deBtn) deBtn.classList.toggle('active', currentLocale === 'de');
+  updateCrawlModeLabel();
+}
+
+async function switchLocale(locale) {
+  if (locale !== 'en' && locale !== 'de') return;
+  currentLocale = locale;
+  applyI18n();
+  // Persist into config.json without wiping other fields
+  try {
+    const res = await fetch('/gui/api/config.php');
+    const json = await res.json();
+    const config = json.config || {};
+    config.locale = locale;
+    if (!config.projectId) config.projectId = document.getElementById('cfg-projectId').value.trim() || 'my-project';
+    await fetch('/gui/api/config.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config, lang: locale }),
+    });
+  } catch (e) {
+    console.warn('Could not persist locale', e);
+  }
+}
+
 // ═══════════════════════════════════════════════════ STATE
+
 let currentStep = 1;
 let completedSteps = new Set();
 let crawling = false;
@@ -594,9 +679,9 @@ let allUrls = [];
 
 // ═══════════════════════════════════════════════════ INIT
 document.addEventListener('DOMContentLoaded', () => {
-  // Wire up crawl mode radio
   document.querySelectorAll('input[name="crawl-mode"]').forEach(r =>
     r.addEventListener('change', updateCrawlModeLabel));
+  applyI18n();
   loadConfig();
   updateStepButtons();
 });
@@ -676,7 +761,7 @@ function runStream(url, termId, onDone) {
   };
   es.onerror = () => {
     es.close();
-    termAppend(termId, '[Verbindungsfehler]', 't-error');
+    termAppend(termId, '[connection error]', 't-error');
     onDone(false);
   };
   return es;
@@ -694,6 +779,10 @@ async function loadConfig() {
     const res = await fetch('/gui/api/config.php');
     const json = await res.json();
     const c = json.config;
+    if (c.locale === 'en' || c.locale === 'de') {
+      currentLocale = c.locale;
+      applyI18n();
+    }
     document.getElementById('cfg-projectId').value = c.projectId || '';
     document.getElementById('cfg-chunkSize').value = c.chunkSize || 40;
     document.getElementById('cfg-delay').value = c.scenarios?.delay ?? 5000;
@@ -751,10 +840,11 @@ function parseSelectors(text) {
 async function saveConfig() {
   clearAlert('cfg-alert');
   const projectId = document.getElementById('cfg-projectId').value.trim();
-  if (!projectId) { showAlert('cfg-alert', 'Projekt-ID darf nicht leer sein.'); return; }
+  if (!projectId) { showAlert('cfg-alert', t('gui.config.project_id_required')); return; }
 
   const config = {
     projectId,
+    locale: currentLocale,
     chunkSize: parseInt(document.getElementById('cfg-chunkSize').value) || 40,
     scenarios: {
       removeSelectors: parseSelectors(document.getElementById('cfg-removeSelectors').value),
@@ -776,13 +866,13 @@ async function saveConfig() {
     });
     const json = await res.json();
     if (json.success) {
-      showAlert('cfg-alert', '✓ config.json gespeichert.', 'success');
+      showAlert('cfg-alert', t('gui.config.saved'), 'success');
       markDone(1);
     } else {
-      showAlert('cfg-alert', json.error || 'Fehler beim Speichern.');
+      showAlert('cfg-alert', json.error || t('gui.config.save_error'));
     }
   } catch(e) {
-    showAlert('cfg-alert', 'Netzwerkfehler: ' + e.message);
+    showAlert('cfg-alert', t('gui.config.network_error', {message: e.message}));
   }
 }
 
@@ -791,10 +881,10 @@ function updateCrawlModeLabel() {
   const mode = document.querySelector('input[name="crawl-mode"]:checked').value;
   document.getElementById('crawl-auto-fields').style.display = mode === 'manual' ? 'none' : '';
   document.getElementById('crawl-manual-fields').style.display = mode === 'manual' ? '' : 'none';
-  document.getElementById('btn-crawl').textContent = mode === 'manual' ? 'URLs übernehmen' : 'URLs sammeln';
+  document.getElementById('btn-crawl').textContent = mode === 'manual' ? t('gui.crawl.adopt') : t('gui.crawl.collect');
   if (mode !== 'manual') {
     document.getElementById('url-label').textContent =
-      mode === 'sitemap' ? 'Sitemap-URL' : 'Website-URL (Startseite)';
+      mode === 'sitemap' ? t('gui.crawl.url_sitemap') : t('gui.crawl.url_start');
     document.getElementById('crawl-url').placeholder =
       mode === 'sitemap' ? 'https://www.example.com/sitemap.xml' : 'https://www.example.com';
   }
@@ -812,14 +902,14 @@ function startCrawl() {
 
   const url = document.getElementById('crawl-url').value.trim();
 
-  if (!url) { showAlert('crawl-alert', 'Bitte eine URL eingeben.'); return; }
-  if (!/^https?:\/\//i.test(url)) { showAlert('crawl-alert', 'URL muss mit http:// oder https:// beginnen.'); return; }
+  if (!url) { showAlert('crawl-alert', t('gui.crawl.url_required')); return; }
+  if (!/^https?:\/\//i.test(url)) { showAlert('crawl-alert', t('gui.crawl.url_scheme')); return; }
 
   crawling = true;
   termClear('crawl-output');
   const btn = document.getElementById('btn-crawl');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Läuft...';
+  btn.innerHTML = '<span class="spinner"></span> ' + t('gui.common.running');
 
   const maxUrls = document.getElementById('crawl-maxUrls').value;
   const includeParams = document.getElementById('crawl-includeParams').checked ? '1' : '';
@@ -830,12 +920,12 @@ function startCrawl() {
   runStream(apiUrl, 'crawl-output', (success) => {
     crawling = false;
     btn.disabled = false;
-    btn.innerHTML = 'URLs sammeln';
+    btn.innerHTML = t('gui.crawl.collect');
     if (success) {
-      showAlert('crawl-alert', '✓ URLs erfolgreich gesammelt.', 'success');
+      showAlert('crawl-alert', t('gui.crawl.success'), 'success');
       markDone(2);
     } else {
-      showAlert('crawl-alert', 'Fehler beim Sammeln der URLs. Bitte Ausgabe prüfen.', 'error');
+      showAlert('crawl-alert', t('gui.crawl.error'), 'error');
     }
   });
 }
@@ -844,13 +934,13 @@ async function saveManualUrls() {
   const raw = document.getElementById('manual-urls').value;
   const urls = raw.split('\n').map(u => u.trim()).filter(u => u !== '');
 
-  if (urls.length === 0) { showAlert('crawl-alert', 'Bitte mindestens eine URL eingeben.'); return; }
+  if (urls.length === 0) { showAlert('crawl-alert', t('gui.crawl.manual_required')); return; }
   const invalid = urls.find(u => !/^https?:\/\//i.test(u));
-  if (invalid) { showAlert('crawl-alert', `Ungültige URL (muss mit http:// oder https:// beginnen): ${invalid}`); return; }
+  if (invalid) { showAlert('crawl-alert', t('gui.crawl.manual_invalid', {url: invalid})); return; }
 
   const btn = document.getElementById('btn-crawl');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Läuft...';
+  btn.innerHTML = '<span class="spinner"></span> ' + t('gui.common.running');
 
   try {
     const res = await fetch('/gui/api/urls.php', {
@@ -860,17 +950,17 @@ async function saveManualUrls() {
     });
     const json = await res.json();
     btn.disabled = false;
-    btn.innerHTML = 'URLs übernehmen';
+    btn.innerHTML = t('gui.crawl.adopt');
     if (json.success) {
-      showAlert('crawl-alert', `✓ ${json.count} URL(s) übernommen.`, 'success');
+      showAlert('crawl-alert', t('gui.crawl.manual_success', {count: json.count}), 'success');
       markDone(2);
     } else {
-      showAlert('crawl-alert', json.error || 'Fehler beim Speichern der URLs.');
+      showAlert('crawl-alert', json.error || t('gui.crawl.manual_error'));
     }
   } catch(e) {
     btn.disabled = false;
-    btn.innerHTML = 'URLs übernehmen';
-    showAlert('crawl-alert', 'Netzwerkfehler: ' + e.message);
+    btn.innerHTML = t('gui.crawl.adopt');
+    showAlert('crawl-alert', t('gui.config.network_error', {message: e.message}));
   }
 }
 
@@ -884,7 +974,7 @@ async function loadUrls() {
     updateUrlCount(allUrls.length);
     if (allUrls.length > 0) markDone(3);
   } catch(e) {
-    showAlert('urls-alert', 'Fehler beim Laden: ' + e.message);
+    showAlert('urls-alert', t('gui.urls.load_error', {message: e.message}));
   }
 }
 
@@ -893,7 +983,7 @@ function renderUrls(urls) {
 }
 
 function updateUrlCount(n) {
-  document.getElementById('url-count').textContent = `${n} URL${n !== 1 ? 's' : ''}`;
+  document.getElementById('url-count').textContent = t('gui.urls.count', {count: n});
 }
 
 function filterUrls() {
@@ -918,13 +1008,13 @@ async function saveUrls() {
     if (json.success) {
       allUrls = urls;
       updateUrlCount(urls.length);
-      showAlert('urls-alert', `✓ ${json.count} URLs gespeichert.`, 'success');
+      showAlert('urls-alert', t('gui.urls.saved', {count: json.count}), 'success');
       markDone(3);
     } else {
-      showAlert('urls-alert', json.error || 'Fehler beim Speichern.');
+      showAlert('urls-alert', json.error || t('gui.urls.save_error'));
     }
   } catch(e) {
-    showAlert('urls-alert', 'Netzwerkfehler: ' + e.message);
+    showAlert('urls-alert', t('gui.config.network_error', {message: e.message}));
   }
 }
 
@@ -935,27 +1025,27 @@ function generateScenarios() {
   const test      = document.getElementById('gen-test').value.trim();
   const reference = document.getElementById('gen-reference').value.trim();
 
-  if (!test || !reference) { showAlert('gen-alert', 'Bitte beide Domains eingeben.'); return; }
-  if (!/^https?:\/\//i.test(test))      { showAlert('gen-alert', 'Test-Domain muss mit http:// oder https:// beginnen.'); return; }
-  if (!/^https?:\/\//i.test(reference)) { showAlert('gen-alert', 'Referenz-Domain muss mit http:// oder https:// beginnen.'); return; }
+  if (!test || !reference) { showAlert('gen-alert', t('gui.gen.domains_required')); return; }
+  if (!/^https?:\/\//i.test(test))      { showAlert('gen-alert', t('gui.gen.url_scheme')); return; }
+  if (!/^https?:\/\//i.test(reference)) { showAlert('gen-alert', t('gui.gen.url_scheme')); return; }
 
   generating = true;
   termClear('gen-output');
   const btn = document.getElementById('btn-generate');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Generiere...';
+  btn.innerHTML = '<span class="spinner"></span> ' + t('gui.gen.running');
 
   const url = `/gui/api/stream/generate.php?test=${encodeURIComponent(test)}&reference=${encodeURIComponent(reference)}`;
 
   runStream(url, 'gen-output', (success) => {
     generating = false;
     btn.disabled = false;
-    btn.innerHTML = 'Szenarien generieren';
+    btn.innerHTML = t('gui.gen.run');
     if (success) {
-      showAlert('gen-alert', '✓ Szenario-Dateien erstellt.', 'success');
+      showAlert('gen-alert', t('gui.gen.success'), 'success');
       markDone(4);
     } else {
-      showAlert('gen-alert', 'Fehler beim Generieren. Bitte Ausgabe prüfen.');
+      showAlert('gen-alert', t('gui.gen.error'));
     }
   });
 }
@@ -972,7 +1062,7 @@ async function loadStatus() {
     const infoEl = document.getElementById('active-info');
     if (json.activeFile) {
       infoEl.style.display = 'block';
-      infoEl.textContent = `Aktiv: ${json.activeFile} (${json.activeUrlCount} URLs)`;
+      infoEl.textContent = t('gui.test.active_info', {file: json.activeFile, count: json.activeUrlCount});
     } else {
       infoEl.style.display = 'none';
     }
@@ -982,7 +1072,7 @@ async function loadStatus() {
 
     updateTestButtons(json);
   } catch(e) {
-    showAlert('test-alert', 'Status konnte nicht geladen werden.', 'warning');
+    showAlert('test-alert', t('gui.test.status_error'), 'warning');
   }
 }
 
@@ -1000,7 +1090,7 @@ function updateTestButtons(status) {
   // Hint when active but no reference yet
   const testBtn = document.getElementById('btn-test');
   if (hasActive && !hasRef) {
-    testBtn.title = 'Bitte zuerst Referenz-Screenshots erstellen';
+    testBtn.title = t('gui.test.need_reference_first');
   } else {
     testBtn.title = '';
   }
@@ -1016,7 +1106,7 @@ function runManage(action) {
   runStream(url, 'test-output', (success) => {
     setTestRunning(false, null);
     loadStatus();
-    if (!success) showAlert('test-alert', 'Fehler bei der Aktion. Bitte Ausgabe prüfen.', 'warning');
+    if (!success) showAlert('test-alert', t('gui.test.action_error'), 'warning');
   });
 }
 
@@ -1039,18 +1129,18 @@ function runBackstop(action) {
         window.open('/backstop_data/html_report/index.html', '_blank');
         document.getElementById('report-banner').style.display = 'flex';
       } else {
-        showAlert('test-alert', '🔍 Tests mit Fehlern beendet — Abweichungen gefunden. Bericht prüfen.', 'warning');
+        showAlert('test-alert', t('gui.test.mismatches'), 'warning');
         // Still show the report link since report was generated
         document.getElementById('report-banner').querySelector('.rb-sub').textContent =
-          'Der Bericht zeigt die gefundenen Abweichungen.';
+          t('gui.test.mismatches_sub');
         document.getElementById('report-banner').style.display = 'flex';
       }
     } else {
       // reference
       if (success) {
-        showAlert('test-alert', '✓ Referenz-Screenshots erstellt. Du kannst jetzt Tests ausführen.', 'success');
+        showAlert('test-alert', t('gui.test.reference_ok'), 'success');
       } else {
-        showAlert('test-alert', '📷 Referenz-Screenshots mit Fehlern beendet. Bitte Ausgabe prüfen.', 'warning');
+        showAlert('test-alert', t('gui.test.reference_error'), 'warning');
       }
     }
   });
@@ -1063,17 +1153,17 @@ function setTestRunning(running, action) {
     if (running) {
       btn.disabled = true;
       if (btn.id === 'btn-' + (action === 'reference' ? 'reference' : action === 'test' ? 'test' : action)) {
-        btn.innerHTML = `<span class="spinner"></span> Läuft...`;
+        btn.innerHTML = `<span class="spinner"></span> ${t('gui.common.running')}`;
       }
     } else {
       // Restore labels
       const labels = {
-        'btn-next':      '▶ Nächste Szenarien aktivieren',
-        'btn-reference': '📷 Referenz-Screenshots erstellen',
-        'btn-test':      '🔍 Tests ausführen',
-        'btn-done':      '✓ Als erledigt markieren &amp; weiter',
-        'btn-skip':      '⏭ Überspringen',
-        'btn-reset':     '↺ Alle zurücksetzen',
+        'btn-next':      t('gui.test.next'),
+        'btn-reference': t('gui.test.reference'),
+        'btn-test':      t('gui.test.run'),
+        'btn-done':      t('gui.test.mark_done'),
+        'btn-skip':      t('gui.test.skip'),
+        'btn-reset':     t('gui.test.reset_all'),
       };
       btn.innerHTML = labels[btn.id] || btn.innerHTML;
     }
@@ -1081,16 +1171,16 @@ function setTestRunning(running, action) {
 }
 
 function confirmReset() {
-  if (!confirm('Wirklich alle Szenarien zurücksetzen (pending → alle pending)?')) return;
+  if (!confirm(t('gui.test.reset_confirm_long'))) return;
   runManage('reset');
 }
 
 async function confirmCleanup() {
-  if (!confirm('Alle Screenshots und Berichte unwiderruflich löschen?\n\n• bitmaps_reference/\n• bitmaps_test/\n• html_report/\n• ci_report/\n\nDies kann nicht rückgängig gemacht werden.')) return;
+  if (!confirm(t('gui.test.cleanup_confirm_long'))) return;
 
   const btn = document.getElementById('btn-cleanup');
   btn.disabled = true;
-  btn.textContent = 'Lösche...';
+  btn.textContent = t('gui.test.cleanup_running');
   clearAlert('test-alert');
   document.getElementById('report-banner').style.display = 'none';
 
@@ -1098,16 +1188,16 @@ async function confirmCleanup() {
     const res = await fetch('/gui/api/cleanup.php', { method: 'POST' });
     const json = await res.json();
     if (json.success) {
-      showAlert('test-alert', `✓ Bereinigt. ${json.deleted} Dateien/Ordner gelöscht.`, 'success');
+      showAlert('test-alert', t('gui.test.cleanup_ok', {count: json.deleted}), 'success');
       loadStatus();
     } else {
-      showAlert('test-alert', 'Fehler beim Bereinigen: ' + (json.error || 'Unbekannt'));
+      showAlert('test-alert', t('gui.test.cleanup_fail', {error: json.error || '—'}));
     }
   } catch(e) {
-    showAlert('test-alert', 'Netzwerkfehler: ' + e.message);
+    showAlert('test-alert', t('gui.config.network_error', {message: e.message}));
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '🗑 Screenshots &amp; Berichte löschen';
+    btn.innerHTML = t('gui.test.cleanup');
   }
 }
 </script>

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/common.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonResponse(['error' => 'Methode nicht erlaubt'], 405);
+    jsonResponse(['error' => apiT('api.error.method_not_allowed')], 405);
 }
 
 $targets = [
